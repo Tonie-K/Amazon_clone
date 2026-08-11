@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/global_variables.dart';
+import 'package:flutter_application_1/common/widgets/bottom_bar.dart';
+import 'package:flutter_application_1/constants/global_variables.dart';
+import 'package:flutter_application_1/features/auth/screens/auth_screen.dart';
+import 'package:flutter_application_1/router.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,22 +32,8 @@ class MyApp extends StatelessWidget {
             backgroundColor: GlobalVariables.secondaryColor,
             foregroundColor: Colors.black,
           ))),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("This is the appbar."),
-        ),
-        body: Column(
-          children: [
-            const Center(
-              child: Text('Home Page'),
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Text('click'),
-            ),
-          ],
-        ),
-      ),
+      onGenerateRoute: (settings) => generateRoute(settings),
+      home: const BottomBar(),
     );
   }
 }
