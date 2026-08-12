@@ -24,6 +24,7 @@ class _BottomBarState extends State<BottomBar> {
         backgroundColor: GlobalVariables.backgroundColor,
         iconSize: 28,
         items: [
+          //Home page
           BottomNavigationBarItem(
             icon: Container(
               width: bottomBarWidth,
@@ -41,6 +42,8 @@ class _BottomBarState extends State<BottomBar> {
             ),
             label: '',
           ),
+
+          // Account
           BottomNavigationBarItem(
             icon: Container(
               width: bottomBarWidth,
@@ -58,6 +61,8 @@ class _BottomBarState extends State<BottomBar> {
             ),
             label: '',
           ),
+
+          // Cart
           BottomNavigationBarItem(
             icon: Container(
               width: bottomBarWidth,

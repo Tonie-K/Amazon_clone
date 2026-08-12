@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
           ))),
       onGenerateRoute: (settings) => generateRoute(settings),
-      home: const BottomBar(),
+      home: const AuthScreen(),
     );
   }
 }
