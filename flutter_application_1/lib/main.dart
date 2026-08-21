@@ -4,6 +4,7 @@ import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/features/auth/screens/auth_screen.dart';
 import 'package:flutter_application_1/router.dart';
 import 'package:flutter_application_1/features/account/screens/account_screen.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
           ))),
       onGenerateRoute: (settings) => generateRoute(settings),
-      home: const AccountScreen(),
+      home: const AuthScreen(),
     );
   }
 }

@@ -14,16 +14,20 @@ class CustomTextfield extends StatelessWidget {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
-        hintText: hintText,
-        border: const OutlineInputBorder(
-            borderSide: BorderSide(
-          color: Colors.black,
-        )),
-        enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(
-          color: Colors.black,
-        )),
-      ),
+          hintText: hintText,
+          border: const OutlineInputBorder(
+              borderSide: BorderSide(
+            color: Colors.black,
+          )),
+          enabledBorder: const OutlineInputBorder(
+              borderSide: BorderSide(
+            color: Colors.black,
+          )),
+          focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(
+            color: Colors.blue,
+            width: 2,
+          ))),
       validator: (val) {
         return null;
       },
