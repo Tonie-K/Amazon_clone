@@ -16,50 +16,90 @@ class NavBar extends StatefulWidget {
 class _NavBarState extends State<NavBar> {
   int myCurrentIndex = 0;
 
-  List pages = const [
+  final List<Widget> pages = const [
     HomePage(),
     AccountScreen(),
     CartPage(),
     MenuPage(),
   ];
 
+  final List<_NavItemData> _navItems = const [
+    _NavItemData(icon: Icons.home_outlined, label: 'Home'),
+    _NavItemData(icon: Icons.person_outline, label: 'You'),
+    _NavItemData(icon: Icons.shopping_cart_outlined, label: 'Cart'),
+    _NavItemData(icon: Icons.menu, label: 'Browse'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
             color: GlobalVariables.backgroundColor,
             border: Border(
               top: BorderSide(color: Color(0xFFDDDDDD), width: 1),
+            )),
+        child: SafeArea(
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(
+                _navItems.length,
+                (index) {
+                  final item = _navItems[index];
+                  final isSelected = index == myCurrentIndex;
+
+                  return Expanded(
+                      child: InkWell(
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () => setState(() => myCurrentIndex = index),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          height: 3,
+                          width: 32,
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected ? Colors.black : Colors.transparent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Icon(
+                          item.icon,
+                          size: 26,
+                          color: Colors.black,
+                        ),
+                        Text(item.label,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ))
+                      ],
+                    ),
+                  ));
+                },
+              ),
             ),
           ),
-          child: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              currentIndex: myCurrentIndex,
-              onTap: (index) {
-                setState(() {
-                  myCurrentIndex = index;
-                });
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_3),
-                  label: 'You',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.shopping_cart),
-                  label: 'Cart',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu),
-                  label: 'Browse',
-                ),
-              ]),
         ),
-        body: pages[myCurrentIndex]);
+      ),
+      body: pages[myCurrentIndex],
+    );
   }
+}
+
+class _NavItemData {
+  final IconData icon;
+  final String label;
+
+  const _NavItemData({
+    required this.icon,
+    required this.label,
+  });
 }
