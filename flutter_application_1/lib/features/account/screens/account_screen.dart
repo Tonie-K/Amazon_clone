@@ -1,47 +1,148 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
+import 'package:flutter_application_1/features/account/widgets/icons_tile.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
+  static const String routeName = '/account';
   const AccountScreen({super.key});
 
   @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: GlobalVariables.appBarGradient,
+      backgroundColor: GlobalVariables.backgroundColor,
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: CustomAppBar(),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Sub-header controls
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Hello',
+                    style: TextStyle(fontSize: 16, color: Color(0xFF565959)),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.settings_outlined, color: Color(0xFF0F1111), size: 24),
+                      const SizedBox(width: 12),
+                      Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: Image.network(
+                              'https://flagcdn.com/w20/in.png',
+                              width: 18,
+                              height: 12,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'EN',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                child: Image.asset('assets/images/amazon_in.png',
-                  width: 120,
-                  height: 45,
-                  color: Colors.black,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.only(left: 15, right: 15),
-                child: Row(
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.only(right: 15),
-                      child: Icon(Icons.notifications_outlined),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Welcome to Amazon',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF0F1111),
                     ),
-                    Icon(
-                      Icons.search
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Standard Create Account Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GlobalVariables.secondaryColor,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Create account',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
                     ),
-                  ],
-                ),   
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Standard Sign In Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: GlobalVariables.greyBackgroundCOlor,
+                        foregroundColor: Colors.black,
+                        side: const BorderSide(color: Color(0xFFD5D9D9)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Sign in',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Feature List Items
+                  const FeatureTile(
+                    icon: Icons.published_with_changes_rounded,
+                    text: 'Upto ₹100 cashback on your first order',
+                  ),
+                  const FeatureTile(
+                    icon: Icons.local_shipping_outlined,
+                    text: 'Free Delivery on first order – for top categories',
+                  ),
+                  const FeatureTile(
+                    icon: Icons.assignment_return_outlined,
+                    text: 'Easy Returns',
+                  ),
+                  const FeatureTile(
+                    icon: Icons.payments_outlined,
+                    text: 'Pay on Delivery',
+                  ),
+                ],
               ),
-            ],
-          )
+            ),
+          ],
         ),
       ),
     );
