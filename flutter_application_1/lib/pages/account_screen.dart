@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
-import 'package:flutter_application_1/features/account/widgets/icons_tile.dart';
+import 'package:flutter_application_1/common/widgets/icons_tile.dart';
+import 'package:flutter_application_1/pages/auth_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   static const String routeName = '/account';
@@ -83,12 +84,17 @@ class _AccountScreenState extends State<AccountScreen> {
                   SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AuthScreen(),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
                         backgroundColor: GlobalVariables.secondaryColor,
                         foregroundColor: Colors.black,
-                        elevation: 0,
+                        side: const BorderSide(color: Color(0xFFD5D9D9)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -108,7 +114,12 @@ class _AccountScreenState extends State<AccountScreen> {
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AuthScreen(),
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: GlobalVariables.greyBackgroundCOlor,
                         foregroundColor: Colors.black,
