@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_application_1/constants/global_variables.dart";
-import "package:flutter_application_1/features/account/screens/account_screen.dart";
-import "package:flutter_application_1/pages/auth_screen.dart";
+import "package:flutter_application_1/pages/account_screen.dart";
 import "package:flutter_application_1/pages/cart_page.dart";
 import "package:flutter_application_1/pages/home_page.dart";
 import "package:flutter_application_1/pages/menu_page.dart";
