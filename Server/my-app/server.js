@@ -1,7 +1,7 @@
-const express = require("express"); // npm install express
-const mongoose = require("mongoose"); // npm i mongoose
+const express = require("express");
+const mongoose = require("mongoose");
 
-require("dotenv").config(); // Load Environment Variables. Make sure .env is in .gitignore. npm i dotenv
+require("dotenv").config();
 
 const port = process.env.PORT;
 
