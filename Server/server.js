@@ -19,6 +19,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+require("./models/user");
+require("./models/product");
+require("./models/order");
+
+require("./routes/authRoutes")(app);
+require("./routes/orderRoutes")(app);
+require("./routes/productRoutes")(app);
+
 app.listen(port, () => {
     console.log(`server is running on port ${port}`);
 });

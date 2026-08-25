@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
+import 'package:flutter_application_1/pages/auth_screen.dart';
+import 'package:flutter_application_1/common/widgets/icons_tile.dart';
 
 class AccountScreen extends StatefulWidget {
   static const String routeName = '/account';

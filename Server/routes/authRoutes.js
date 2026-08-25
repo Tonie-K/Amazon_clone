@@ -26,7 +26,7 @@ module.exports = (app) => {
 
             if (!user) {
                 const response = await User.create({ email, otp: newOTP });
-                res.status(201).json({ message: "OTP Sent Succesfully" }); s
+                res.status(201).json({ message: "OTP Sent Succesfully" });
             } else {
                 const response = await User.updateOne({ email, otp: newOTP });
                 res.status(201).json({ message: "OTP Sent Succesfully" });
