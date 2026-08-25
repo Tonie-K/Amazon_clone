@@ -23,7 +23,7 @@ class _AccountScreenState extends State<AccountScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Sub-header controls
+            
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -43,8 +43,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(2),
-                            child: Image.network(
-                              'https://flagcdn.com/w20/in.png',
+                            child: Image.asset(
+                              'assets/images/flag.png',
                               width: 18,
                               height: 12,
                               fit: BoxFit.cover,
@@ -137,20 +137,20 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Feature List Items
-                  const FeatureTile(
+                
+                  const IconTile(
                     icon: Icons.published_with_changes_rounded,
                     text: 'Upto ₹100 cashback on your first order',
                   ),
-                  const FeatureTile(
+                  const IconTile(
                     icon: Icons.local_shipping_outlined,
                     text: 'Free Delivery on first order – for top categories',
                   ),
-                  const FeatureTile(
+                  const IconTile(
                     icon: Icons.assignment_return_outlined,
                     text: 'Easy Returns',
                   ),
-                  const FeatureTile(
+                  const IconTile(
                     icon: Icons.payments_outlined,
                     text: 'Pay on Delivery',
                   ),

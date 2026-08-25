@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class FeatureTile extends StatelessWidget {
+class IconTile extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const FeatureTile({
+  const IconTile({
     super.key,
     required this.icon,
     required this.text,
