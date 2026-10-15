@@ -4,61 +4,87 @@ import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/services/product_service.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
+import 'package:flutter_application_1/pages/search_screen.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _search(String query) {
+    final q = query.trim();
+    if (q.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    _searchController.clear();
+    // Opens inside the shell; from here on the shell's own search bar shows
+    Navigator.pushNamed(context, SearchScreen.routeName, arguments: q);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            color: GlobalVariables.secondaryColor,
-            child: const SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  SizedBox(height: 8),
-                  _QuickLinks(),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(12, 0, 4, 4),
-                    child: CustomSearchBar(),
+    return Column(
+      children: [
+        // Home's own header. The shell's shared search bar is hidden on this page.
+        Container(
+          color: GlobalVariables.secondaryColor,
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+                  child: CustomSearchBar(
+                    controller: _searchController,
+                    onSubmitted: _search,
                   ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: const [
-                SizedBox(height: 12),
-                _DeliveryBar(),
-                SizedBox(height: 12),
-                _HeroRow(),
-                SizedBox(height: 12),
-                _FeatureCards(),
-                SizedBox(height: 16),
-                _ThumbGrid(),
-                SizedBox(height: 20),
-                _SectionHeader(
-                  title: 'Brands related to your search',
-                  sponsored: true,
                 ),
-                SizedBox(height: 12),
-                _BrandCards(),
-                SizedBox(height: 24),
-                _SectionHeader(title: 'Recommended deals for you'),
-                SizedBox(height: 12),
-                _DealsRow(),
-                SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: _QuickLinks(),
+                ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: const [
+              SizedBox(height: 12),
+              _DeliveryBar(),
+              SizedBox(height: 12),
+              _HeroRow(),
+              SizedBox(height: 12),
+              _FeatureCards(),
+              SizedBox(height: 16),
+              _ThumbGrid(),
+              SizedBox(height: 20),
+              _SectionHeader(
+                title: 'Brands related to your search',
+                sponsored: true,
+              ),
+              SizedBox(height: 12),
+              _BrandCards(),
+              SizedBox(height: 24),
+              _SectionHeader(title: 'Recommended deals for you'),
+              SizedBox(height: 12),
+              _DealsRow(),
+              SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -28,9 +28,6 @@ class _AccountScreenState extends State<AccountScreen> {
 
     return Scaffold(
       backgroundColor: GlobalVariables.backgroundColor,
-      appBar: AppBar(
-        title: const CustomAppBar(),
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [

@@ -38,10 +38,6 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const CustomAppBar(),
-      ),
       body: FutureBuilder<List<Product>>(
         future: _searchFuture,
         builder: (context, snapshot) {

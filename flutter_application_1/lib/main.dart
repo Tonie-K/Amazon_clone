@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/home_page.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_application_1/common/widgets/navigation_page.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/router.dart';
+import 'package:flutter_application_1/pages/main_layout.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Restore the saved login (if any) before the first frame
   final userProvider = UserProvider();
   await userProvider.loadFromStorage();
 
@@ -19,8 +19,6 @@ Future<void> main() async {
     ),
   );
 
-  // Check the saved token with the server in the background.
-  // If it has expired, the user is signed out automatically.
   userProvider.validateSession();
 }
 
@@ -50,7 +48,7 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.black,
           ))),
       onGenerateRoute: (settings) => generateRoute(settings),
-      home: const NavBar(),
+      home: const MainLayoutScreen(),
     );
   }
 }

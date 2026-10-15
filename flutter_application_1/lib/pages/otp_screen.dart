@@ -74,23 +74,6 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: GlobalVariables.backgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              color: GlobalVariables.greyBackgroundCOlor,
-              border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
-            ),
-          ),
-          title: Image.asset(
-            'assets/images/amazon_in.png',
-            width: 120,
-            height: 45,
-          ),
-          centerTitle: true,
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

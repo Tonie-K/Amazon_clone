@@ -56,30 +56,6 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: AppBar(
-            automaticallyImplyLeading: false,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                  color: GlobalVariables.greyBackgroundCOlor,
-                  border: Border(
-                      bottom: BorderSide(
-                    color: Colors.grey,
-                    width: 1,
-                  ))),
-            ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/amazon_in.png',
-                  width: 120,
-                  height: 45,
-                ),
-              ],
-            )),
-      ),
       backgroundColor: GlobalVariables.backgroundColor,
       body: SafeArea(
           child: SingleChildScrollView(
