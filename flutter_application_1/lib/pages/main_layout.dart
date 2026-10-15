@@ -8,6 +8,7 @@ import 'package:flutter_application_1/pages/cart_page.dart';
 import 'package:flutter_application_1/pages/home_page.dart';
 import 'package:flutter_application_1/pages/menu_page.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
+import 'package:flutter_application_1/pages/wallet_page.dart';
 import 'package:flutter_application_1/pages/search_screen.dart';
 
 /// Watches the shell's inner navigator so the shell knows (a) whether a page
@@ -71,9 +72,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     onSearchRoute: (query) => _searchController.text = query,
   );
 
+  // Added WalletPage into the 5-tab stack
   final List<Widget> _pages = const [
     HomePage(),
     AccountScreen(),
+    WalletPage(),
     CartPage(),
     MenuPage(),
   ];
@@ -203,6 +206,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                 icon: Icon(Icons.person_outline),
                 activeIcon: Icon(Icons.person),
                 label: 'You',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                activeIcon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.shopping_cart_outlined),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/common/widgets/custom_button.dart';
-import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/models/product.dart';
 
 class ProductDetailScreen extends StatelessWidget {

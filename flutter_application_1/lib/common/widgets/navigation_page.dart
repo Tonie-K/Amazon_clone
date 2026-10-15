@@ -4,6 +4,7 @@ import "package:flutter_application_1/pages/cart_page.dart";
 import "package:flutter_application_1/pages/home_page.dart";
 import "package:flutter_application_1/pages/menu_page.dart";
 import "package:flutter_application_1/pages/account_screen.dart";
+import "package:flutter_application_1/pages/wallet_page.dart";
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -18,6 +19,7 @@ class _NavBarState extends State<NavBar> {
   final List<Widget> pages = const [
     HomePage(),
     AccountScreen(),
+    WalletPage(),
     CartPage(),
     MenuPage(),
   ];
