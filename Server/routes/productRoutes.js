@@ -21,8 +21,23 @@ module.exports = (app) => {
         }
     });
 
-    //GET REQUEST FOR READING A SINGLE PRODUCT
+    // DELETE REQUEST FOR REMOVING ALL PRODUCTS
+    app.delete("/api/v1/delete-all/products", requireLogin, async (req, res) => {
+        console.log("DELETE ALL PRODUCTS");
 
+        try {
+            const response = await Product.deleteMany({});
+            res.status(200).json({
+                message: `Successfully deleted ${response.deletedCount} products.`,
+                response,
+            });
+        } catch (error) {
+            console.log("ERROR: ", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    //GET REQUEST FOR READING A SINGLE PRODUCT
     app.get("/api/v1/get/product/:id", async (req, res) => {
         console.log("GET SINGLE PRODUCT");
 
@@ -45,14 +60,23 @@ module.exports = (app) => {
     //GET REQUEST FOR SEARCHING PRODUCTS
     app.get("/api/v1/products/search/:query", async (req, res) => {
         console.log("SEARCH PRODUCTS");
-        const { query } = req.params;
+        let { query } = req.params;
 
         try {
+            query = decodeURIComponent(query).trim();
+
+            let baseQuery = query;
+            if (baseQuery.length > 3 && baseQuery.toLowerCase().endsWith("s")) {
+                baseQuery = baseQuery.slice(0, -1);
+            }
+
+            const regexPattern = new RegExp(baseQuery, "i");
+
             const products = await Product.find({
                 $or: [
-                    { title: { $regex: query, $options: "i" } },
-                    { category: { $regex: query, $options: "i" } },
-                    { description: { $regex: query, $options: "i" } },
+                    { title: { $regex: regexPattern } },
+                    { category: { $regex: regexPattern } },
+                    { description: { $regex: regexPattern } },
                 ],
             });
 
@@ -67,14 +91,26 @@ module.exports = (app) => {
     app.post("/api/v1/add/product", requireLogin, async (req, res) => {
         console.log("ADD A NEW PRODUCT");
 
-        const { title, imageUrl, description, price, category, stock, rating } = req.body;
+        // 1. Destructure specBadge and isSponsored from req.body
+        const {
+            title,
+            imageUrl,
+            description,
+            price,
+            category,
+            stock,
+            rating,
+            specBadge,
+            isSponsored,
+        } = req.body;
 
         try {
             const product = await Product.findOne({ title });
             if (product) {
-                return res.status(400).json({ message: "Product already exists! " });
+                return res.status(400).json({ message: "Product already exists!" });
             }
 
+            // 2. Include the new properties in productFields
             const productFields = {
                 title,
                 imageUrl,
@@ -83,6 +119,8 @@ module.exports = (app) => {
                 category,
                 stock,
                 rating,
+                specBadge,
+                isSponsored: isSponsored ?? false, // Preserves true if passed, otherwise defaults to false
             };
 
             const response = await Product.create(productFields);

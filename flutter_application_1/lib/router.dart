@@ -4,6 +4,7 @@ import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/pages/otp_screen.dart';
 import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
+import 'package:flutter_application_1/pages/search_screen.dart';
 
 Route<dynamic> generateRoute(RouteSettings routeSettings) {
   switch (routeSettings.name) {
@@ -22,6 +23,12 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const AccountScreen(),
+      );
+    case SearchScreen.routeName:
+      final query = routeSettings.arguments as String;
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => SearchScreen(searchQuery: query),
       );
     case OtpScreen.routeName:
       final email = routeSettings.arguments as String? ?? '';

@@ -20,4 +20,23 @@ class ProductService {
       return [];
     }
   }
+
+  static Future<List<Product>> searchProducts(String searchQuery) async {
+    try {
+      final encodedQuery = Uri.encodeComponent(searchQuery.trim());
+      final res = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/products/search/$encodedQuery'),
+      );
+
+      if (res.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(res.body);
+        final List<dynamic> data = body['response'] ?? [];
+        return data.map((item) => Product.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Search error: $e');
+      return [];
+    }
+  }
 }

@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/search_screen.dart';
 
 class CustomSearchBar extends StatelessWidget {
-  const CustomSearchBar({super.key});
+  final bool isSearchPage;
+
+  const CustomSearchBar({
+    super.key,
+    this.isSearchPage = false,
+  });
+
+  void _navigateToSearchScreen(BuildContext context, String query) {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isNotEmpty) {
+      Navigator.pushNamed(
+        context,
+        SearchScreen.routeName,
+        arguments: trimmedQuery,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        if (isSearchPage)
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
         Expanded(
           child: SearchBar(
             constraints: const BoxConstraints(maxHeight: 46, minHeight: 40),
             hintText: 'Search Amazon.in',
             leading: const Icon(
               Icons.search,
-              size: 32,
+              size: 28,
             ),
             trailing: [
               IconButton(
@@ -35,11 +57,8 @@ class CustomSearchBar extends StatelessWidget {
                 ),
               ),
             ),
-            onChanged: (value) {},
+            onSubmitted: (value) => _navigateToSearchScreen(context, value),
           ),
-        ),
-        const SizedBox(
-          width: 0,
         ),
         IconButton(
           icon: const Icon(Icons.qr_code_scanner),

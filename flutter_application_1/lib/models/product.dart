@@ -7,6 +7,8 @@ class Product {
   final String category;
   final int stock;
   final double rating;
+  final String? specBadge;
+  final bool isSponsored;
 
   Product({
     required this.id,
@@ -17,6 +19,8 @@ class Product {
     required this.category,
     required this.stock,
     required this.rating,
+    this.specBadge,
+    this.isSponsored = false,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class Product {
       category: json['category'] ?? '',
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      specBadge: json['specBadge']?.toString(),
+      isSponsored: json['isSponsored'] == true,
     );
   }
 }

@@ -9,6 +9,8 @@ const productSchema = new Schema({
     category: { type: String },
     stock: { type: Number },
     rating: { type: Number },
+    specBadge: { type: String },
+    isSponsored: { type: Boolean, default: false },
 });
 
-mongoose.model("products", productSchema)
+mongoose.model("products", productSchema);
