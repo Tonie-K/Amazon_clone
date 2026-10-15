@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_1/common/widgets/navigation_page.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/router.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Restore the saved login (if any) before the first frame
+  final userProvider = UserProvider();
+  await userProvider.loadFromStorage();
+
+  runApp(
+    ChangeNotifierProvider.value(
+      value: userProvider,
+      child: const MyApp(),
+    ),
+  );
+
+  // Check the saved token with the server in the background.
+  // If it has expired, the user is signed out automatically.
+  userProvider.validateSession();
 }
 
 class MyApp extends StatelessWidget {

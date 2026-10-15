@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
+import 'package:flutter_application_1/common/widgets/icons_tile.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
-import 'package:flutter_application_1/common/widgets/icons_tile.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 
 class AccountScreen extends StatefulWidget {
   static const String routeName = '/account';
@@ -13,26 +15,38 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  void _openAuth() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserProvider>();
+
     return Scaffold(
       backgroundColor: GlobalVariables.backgroundColor,
       appBar: AppBar(
-        title: CustomAppBar(),
+        title: const CustomAppBar(),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Hello',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF565959)),
+                  Expanded(
+                    child: Text(
+                      user.isLoggedIn ? 'Hello, ${user.displayName}' : 'Hello',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 16, color: Color(0xFF565959)),
+                    ),
                   ),
                   Row(
                     children: [
@@ -63,97 +77,105 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
                   const SizedBox(height: 8),
-                  const Text(
-                    'Welcome to Amazon',
+                  Text(
+                    user.isLoggedIn ? 'Welcome back' : 'Welcome to Amazon',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF0F1111),
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Standard Create Account Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AuthScreen(),
+                  if (user.isLoggedIn) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: () => context.read<UserProvider>().logout(),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: GlobalVariables.greyBackgroundCOlor,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Color(0xFFD5D9D9)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: GlobalVariables.secondaryColor,
-                        foregroundColor: Colors.black,
-                        side: const BorderSide(color: Color(0xFFD5D9D9)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        child: const Text(
+                          'Sign out',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
                         ),
-                      ),
-                      child: const Text(
-                        'Create account',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Standard Sign In Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AuthScreen(),
+                    const SizedBox(height: 32),
+                  ] else ...[
+                    // Create Account Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: _openAuth,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: GlobalVariables.secondaryColor,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Color(0xFFD5D9D9)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: GlobalVariables.greyBackgroundCOlor,
-                        foregroundColor: Colors.black,
-                        side: const BorderSide(color: Color(0xFFD5D9D9)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                        child: const Text(
+                          'Create account',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
                         ),
-                      ),
-                      child: const Text(
-                        'Sign in',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-
-                
-                  const IconTile(
-                    icon: Icons.published_with_changes_rounded,
-                    text: 'Upto ₹100 cashback on your first order',
-                  ),
-                  const IconTile(
-                    icon: Icons.local_shipping_outlined,
-                    text: 'Free Delivery on first order – for top categories',
-                  ),
-                  const IconTile(
-                    icon: Icons.assignment_return_outlined,
-                    text: 'Easy Returns',
-                  ),
-                  const IconTile(
-                    icon: Icons.payments_outlined,
-                    text: 'Pay on Delivery',
-                  ),
+                    const SizedBox(height: 12),
+                    // Sign In Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: _openAuth,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: GlobalVariables.greyBackgroundCOlor,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Color(0xFFD5D9D9)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign in',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const IconTile(
+                      icon: Icons.published_with_changes_rounded,
+                      text: 'Upto ₹100 cashback on your first order',
+                    ),
+                    const IconTile(
+                      icon: Icons.local_shipping_outlined,
+                      text: 'Free Delivery on first order – for top categories',
+                    ),
+                    const IconTile(
+                      icon: Icons.assignment_return_outlined,
+                      text: 'Easy Returns',
+                    ),
+                    const IconTile(
+                      icon: Icons.payments_outlined,
+                      text: 'Pay on Delivery',
+                    ),
+                  ],
                 ],
               ),
             ),
