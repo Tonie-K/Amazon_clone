@@ -16,11 +16,9 @@ class UserProvider extends ChangeNotifier {
   String? get name => _name;
   bool get isLoggedIn => _token != null;
 
-  /// Name if the user has one, otherwise their email.
   String get displayName =>
       (_name != null && _name!.isNotEmpty) ? _name! : (_email ?? '');
 
-  /// Reads the saved session from the device. Call before runApp.
   Future<void> loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString(_tokenKey);
@@ -29,8 +27,6 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Checks the saved token with the server. Logs out only if the server
-  /// says the token is invalid (401/404), not when the network is down.
   Future<void> validateSession() async {
     if (_token == null) return;
     final result = await AuthService.getCurrentUser(_token!);

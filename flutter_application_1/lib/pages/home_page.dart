@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/common/widgets/custom_search_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
+import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/services/product_service.dart';
+import 'package:flutter_application_1/pages/product_detail_screen.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -10,7 +13,6 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          // Header: quick-link row first, search bar underneath it
           Container(
             color: GlobalVariables.secondaryColor,
             child: const SafeArea(
@@ -21,7 +23,7 @@ class HomePage extends StatelessWidget {
                   _QuickLinks(),
                   SizedBox(height: 8),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(12, 0, 4, 8),
+                    padding: EdgeInsets.fromLTRB(12, 0, 4, 4),
                     child: CustomSearchBar(),
                   ),
                 ],
@@ -30,6 +32,7 @@ class HomePage extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
+              padding: EdgeInsets.zero,
               children: const [
                 SizedBox(height: 12),
                 _DeliveryBar(),
@@ -60,10 +63,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/// Shows an image from your assets when [asset] is given,
-/// otherwise a grey placeholder with an icon.
-/// To use real pictures later, pass e.g. asset: 'assets/images/shirts.png'
-/// (and list the file under `assets:` in pubspec.yaml).
 class _ImageBox extends StatelessWidget {
   final String? asset;
   final double? width;
@@ -110,15 +109,17 @@ class _QuickLinks extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
+          Expanded(child: _QuickLinkItem(icon: Icons.smartphone, label: 'Pay')),
           Expanded(
-              child: _QuickLinkItem(icon: Icons.smartphone, label: 'Mobiles')),
+              child: _QuickLinkItem(icon: Icons.checkroom, label: 'Bazaar')),
           Expanded(
-              child: _QuickLinkItem(icon: Icons.checkroom, label: 'Fashion')),
-          Expanded(
-              child: _QuickLinkItem(icon: Icons.devices, label: 'Electronics')),
+              child: _QuickLinkItem(icon: Icons.devices, label: 'Deals Live')),
           Expanded(
               child: _QuickLinkItem(
-                  icon: Icons.local_offer_outlined, label: 'Deals')),
+                  icon: Icons.local_offer_outlined, label: 'Video')),
+          Expanded(
+              child: _QuickLinkItem(
+                  icon: Icons.grid_view_rounded, label: 'Pharmacy')),
         ],
       ),
     );
@@ -134,26 +135,14 @@ class _QuickLinkItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 64,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE3E6E6),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, size: 30, color: const Color(0xFF333333)),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
+      child: Container(
+        height: 64,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE3E6E6),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(icon, size: 30, color: const Color(0xFF333333)),
       ),
     );
   }
@@ -188,17 +177,6 @@ class _DeliveryBar extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 56,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(19),
-            ),
-            child:
-                const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
           ),
         ],
       ),
@@ -373,58 +351,104 @@ class _BrandCards extends StatelessWidget {
   }
 }
 
-class _DealsRow extends StatelessWidget {
+class _DealsRow extends StatefulWidget {
   const _DealsRow();
 
-  static const _titles = [
-    'Deal of the day',
-    'Top picks for you',
-    'Limited time offer',
-    'Best sellers',
-  ];
+  @override
+  State<_DealsRow> createState() => _DealsRowState();
+}
+
+class _DealsRowState extends State<_DealsRow> {
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = ProductService.fetchProducts();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 230,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: _titles.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (_, i) => SizedBox(
-          width: 150,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _ImageBox(width: 150, height: 150, radius: 12),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCC0C39),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'Up to 40% off',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+    return FutureBuilder<List<Product>>(
+      future: _productsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 230,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox(
+            height: 100,
+            child: Center(child: Text('No products available')),
+          );
+        }
+
+        final products = snapshot.data!;
+
+        return SizedBox(
+          height: 230,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: products.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final product = products[index];
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    ProductDetailScreen.routeName,
+                    arguments: product,
+                  );
+                },
+                child: SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          product.imageUrl,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 150,
+                            height: 150,
+                            color: const Color(0xFFE3E6E6),
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '₹${product.price}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        product.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _titles[i],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13),
-              ),
-            ],
+              );
+            },
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

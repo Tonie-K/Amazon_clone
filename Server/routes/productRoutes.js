@@ -42,6 +42,27 @@ module.exports = (app) => {
         }
     });
 
+    //GET REQUEST FOR SEARCHING PRODUCTS
+    app.get("/api/v1/products/search/:query", async (req, res) => {
+        console.log("SEARCH PRODUCTS");
+        const { query } = req.params;
+
+        try {
+            const products = await Product.find({
+                $or: [
+                    { title: { $regex: query, $options: "i" } },
+                    { category: { $regex: query, $options: "i" } },
+                    { description: { $regex: query, $options: "i" } },
+                ],
+            });
+
+            res.status(200).json({ message: "Search Results:", response: products });
+        } catch (error) {
+            console.log("ERROR: ", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
     //POST REQUEST FOR ADDING A NEW PRODUCT
     app.post("/api/v1/add/product", requireLogin, async (req, res) => {
         console.log("ADD A NEW PRODUCT");
