@@ -54,7 +54,7 @@ module.exports = (app) => {
                 return res.status(400).json({ message: "Product already exists! " });
             }
 
-            productFields = {
+            const productFields = {
                 title,
                 imageUrl,
                 description,
@@ -77,7 +77,7 @@ module.exports = (app) => {
         console.log("UPDATE PRODUCT");
 
         const { id } = req.params;
-        const { title, imageURL, description, price, category, stock, rating } = req.body;
+        const { title, imageUrl, description, price, category, stock, rating } = req.body;
 
         try {
             const response = await Product.updateOne(
