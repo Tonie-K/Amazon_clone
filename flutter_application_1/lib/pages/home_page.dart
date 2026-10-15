@@ -33,7 +33,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    // One scrolling page: the header (search bar + quick links) scrolls away
+    // with everything else instead of staying pinned at the top.
+    return ListView(
+      padding: EdgeInsets.zero,
       children: [
         // Home's own header. The shell's shared search bar is hidden on this page.
         Container(
@@ -42,6 +45,11 @@ class _HomePageState extends State<HomePage> {
             bottom: false,
             child: Column(
               children: [
+                // Quick-link row first, search bar underneath it
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: _QuickLinks(),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
                   child: CustomSearchBar(
@@ -49,41 +57,30 @@ class _HomePageState extends State<HomePage> {
                     onSubmitted: _search,
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: _QuickLinks(),
-                ),
               ],
             ),
           ),
         ),
-        Expanded(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: const [
-              SizedBox(height: 12),
-              _DeliveryBar(),
-              SizedBox(height: 12),
-              _HeroRow(),
-              SizedBox(height: 12),
-              _FeatureCards(),
-              SizedBox(height: 16),
-              _ThumbGrid(),
-              SizedBox(height: 20),
-              _SectionHeader(
-                title: 'Brands related to your search',
-                sponsored: true,
-              ),
-              SizedBox(height: 12),
-              _BrandCards(),
-              SizedBox(height: 24),
-              _SectionHeader(title: 'Recommended deals for you'),
-              SizedBox(height: 12),
-              _DealsRow(),
-              SizedBox(height: 24),
-            ],
-          ),
+        const SizedBox(height: 12),
+        const _DeliveryBar(),
+        const SizedBox(height: 12),
+        const _HeroRow(),
+        const SizedBox(height: 12),
+        const _FeatureCards(),
+        const SizedBox(height: 16),
+        const _ThumbGrid(),
+        const SizedBox(height: 20),
+        const _SectionHeader(
+          title: 'Brands related to your search',
+          sponsored: true,
         ),
+        const SizedBox(height: 12),
+        const _BrandCards(),
+        const SizedBox(height: 24),
+        const _SectionHeader(title: 'Recommended deals for you'),
+        const SizedBox(height: 12),
+        const _DealsRow(),
+        const SizedBox(height: 24),
       ],
     );
   }
