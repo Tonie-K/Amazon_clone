@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_application_1/common/widgets/custom_button.dart';
 import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/providers/cart_provider.dart';
