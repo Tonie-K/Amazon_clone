@@ -197,6 +197,70 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+class _ImageBox extends StatelessWidget {
+  final double? width;
+  final double? height;
+  final double radius;
+  final Color color;
+  final Color iconColor;
+  final IconData icon;
+
+  const _ImageBox({
+    this.width,
+    this.height,
+    this.radius = 12,
+    this.color = const Color(0xFFE3E6E6),
+    this.iconColor = Colors.black38,
+    this.icon = Icons.image_outlined,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: ColoredBox(
+          color: color,
+          child: Center(child: Icon(icon, size: 32, color: iconColor)),
+        ),
+      ),
+    );
+  }
+}
+
+class _NetImage extends StatelessWidget {
+  final String url;
+  final double? width;
+  final double? height;
+
+  const _NetImage(this.url, {this.width, this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      url,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Container(
+        width: width,
+        height: height,
+        color: const Color(0xFFE3E6E6),
+        child: const Icon(Icons.image_not_supported, color: Colors.black38),
+      ),
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : Container(
+              width: width,
+              height: height,
+              color: const Color(0xFFE3E6E6),
+            ),
+    );
+  }
+}
+
 const _tileColors = <String, Color>{
   'Laptops': Color(0xFFE6EEFB),
   'Bottles': Color(0xFFEAF5F0),
