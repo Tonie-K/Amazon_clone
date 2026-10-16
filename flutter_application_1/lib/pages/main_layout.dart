@@ -11,8 +11,6 @@ import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/pages/wallet_page.dart';
 import 'package:flutter_application_1/pages/search_screen.dart';
 
-/// Watches the shell's inner navigator so the shell knows (a) whether a page
-/// is open on top of the tabs and (b) which search term to show in its bar.
 class _ShellObserver extends NavigatorObserver {
   final void Function(int delta) onDepthChange;
   final void Function(String query) onSearchRoute;
@@ -54,14 +52,10 @@ class MainLayoutScreen extends StatefulWidget {
 }
 
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
-  // Controls the navigator that lives *inside* the shell. Pages pushed on it
-  // (search results, product details) appear between the search bar and the
-  // bottom nav, so the search bar is never rebuilt or covered.
   final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
   final ValueNotifier<int> _tabIndex = ValueNotifier<int>(0);
   final TextEditingController _searchController = TextEditingController();
 
-  // How many pages are open on top of the tabs (0 = just the tabs)
   final ValueNotifier<int> _depth = ValueNotifier<int>(0);
 
   late final _ShellObserver _observer = _ShellObserver(
@@ -72,7 +66,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
     onSearchRoute: (query) => _searchController.text = query,
   );
 
-  // Added WalletPage into the 5-tab stack
   final List<Widget> _pages = const [
     HomePage(),
     AccountScreen(),
@@ -97,7 +90,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
   }
 
   void _onTabTap(int index) {
-    // Close any search/detail page, then switch tab
     _navKey.currentState?.popUntil((route) => route.isFirst);
     _tabIndex.value = index;
   }
@@ -117,7 +109,6 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           builder: (_) => ProductDetailScreen(product: product),
         );
       default:
-        // The tabs. IndexedStack keeps each tab's state alive when switching.
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ValueListenableBuilder<int>(
@@ -139,20 +130,19 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         if (didPop) return;
         final nav = _navKey.currentState;
         if (nav != null && nav.canPop()) {
-          nav.pop(); // back out of a search/detail page first
+          nav.pop();
         } else if (_tabIndex.value != 0) {
-          _tabIndex.value = 0; // then back to the Home tab
+          _tabIndex.value = 0;
         } else {
-          SystemNavigator.pop(); // then leave the app
+          SystemNavigator.pop();
         }
       },
       child: Scaffold(
         body: ListenableBuilder(
           listenable: Listenable.merge([_tabIndex, _depth]),
           builder: (context, _) {
-            // Home (with nothing open on top) has its own header, so the
-            // shared search bar only appears everywhere else.
             final showHeader = _tabIndex.value != 0 || _depth.value > 0;
+            final canGoBack = _depth.value > 0;
 
             return Column(
               children: [
@@ -162,18 +152,30 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
                         child: SafeArea(
                           bottom: false,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-                            child: CustomSearchBar(
-                              controller: _searchController,
-                              onSubmitted: _onSearch,
+                            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                            child: Row(
+                              children: [
+                                if (canGoBack)
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_back,
+                                        color: Colors.black),
+                                    onPressed: () {
+                                      _navKey.currentState?.pop();
+                                    },
+                                  ),
+                                Expanded(
+                                  child: CustomSearchBar(
+                                    controller: _searchController,
+                                    onSubmitted: _onSearch,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       )
                     : const SizedBox.shrink(),
                 Expanded(
-                  // When the header is showing it already handled the status
-                  // bar, so pages below shouldn't pad for it a second time.
                   child: MediaQuery.removePadding(
                     context: context,
                     removeTop: showHeader,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';

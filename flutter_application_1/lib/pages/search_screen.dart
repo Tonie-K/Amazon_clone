@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/constants/intl.dart';
 import 'package:flutter_application_1/models/product.dart';
@@ -62,12 +61,10 @@ class _SearchScreenState extends State<SearchScreen> {
   // CLIENT-SIDE FILTERING LOGIC
   // ---------------------------------------------------------------------------
 
-  // Helper: Extract total storage capacity in GB from title or spec badge
   int? _extractStorageGB(Product product) {
     final combinedText =
         '${product.title} ${product.specBadge ?? ''}'.toUpperCase();
 
-    // Matches patterns like "512 GB", "512GB", "1 TB", "1TB", "256 GB"
     final match = RegExp(r'(\d+)\s*(GB|TB)').firstMatch(combinedText);
     if (match != null) {
       final value = int.parse(match.group(1)!);
@@ -77,7 +74,6 @@ class _SearchScreenState extends State<SearchScreen> {
     return null;
   }
 
-  // Helper: Match storage chip against numeric GB value
   bool _matchesStorageChip(int? capacityGB, String chip) {
     if (capacityGB == null) return false;
     if (chip == '250 - 499 GB') {
@@ -90,7 +86,6 @@ class _SearchScreenState extends State<SearchScreen> {
     return false;
   }
 
-  // Helper: Whole-word search matching using regex word boundaries (\bWord\b)
   bool _matchesWholeWord(Product product, String targetWord) {
     final combinedText =
         '${product.title} ${product.specBadge ?? ''} ${product.description}';
@@ -102,7 +97,6 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Product> _applyFilters(List<Product> initialList) {
     List<Product> products = List.from(initialList);
 
-    // 1. Prime / Sponsored Filter
     if (_isPrimeOnly) {
       products = products.where((p) => p.isSponsored).toList();
     }
@@ -111,7 +105,6 @@ class _SearchScreenState extends State<SearchScreen> {
       return products;
     }
 
-    // 2. Categorize chips into groups
     final Map<String, List<String>> filterGroups = {
       'rating': [],
       'storage': [],
@@ -154,14 +147,11 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     }
 
-    // 3. Evaluate AND across groups, OR within each group
     return products.where((product) {
-      // Group 1: Rating (Numeric check)
       if (filterGroups['rating']!.isNotEmpty) {
         if (product.rating < 4.0) return false;
       }
 
-      // Group 2: Storage Range (OR across selected storage chips)
       if (filterGroups['storage']!.isNotEmpty) {
         final capacityGB = _extractStorageGB(product);
         final storageMatch = filterGroups['storage']!
@@ -169,21 +159,18 @@ class _SearchScreenState extends State<SearchScreen> {
         if (!storageMatch) return false;
       }
 
-      // Group 3: Brands (OR across selected brands, whole-word matching)
       if (filterGroups['brands']!.isNotEmpty) {
         final brandMatch = filterGroups['brands']!
             .any((brand) => _matchesWholeWord(product, brand));
         if (!brandMatch) return false;
       }
 
-      // Group 4: Specs (OR across selected specs, whole-word matching)
       if (filterGroups['specs']!.isNotEmpty) {
         final specMatch = filterGroups['specs']!
             .any((spec) => _matchesWholeWord(product, spec));
         if (!specMatch) return false;
       }
 
-      // Group 5: Other filters
       if (filterGroups['other']!.isNotEmpty) {
         final otherMatch = filterGroups['other']!
             .any((other) => _matchesWholeWord(product, other));
@@ -200,7 +187,6 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
-          // 1. Delivery Location Banner
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: const BoxDecoration(
@@ -260,8 +246,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
-
-          // 2. Horizontal Filter Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -298,7 +282,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Prime Filter Toggle Chip
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -369,7 +352,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Active Filter Shortcut Chips
                   if (_selectedFilters.isNotEmpty)
                     ..._selectedFilters.map(
                       (filter) => Padding(
@@ -396,10 +378,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-
           const Divider(height: 1, color: Color(0xFFE3E6E6)),
-
-          // 3. Search Results List with Client-Side Filter Evaluation
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _searchFuture,
@@ -417,7 +396,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   );
                 }
 
-                // Apply frontend grouped filtering rules
                 final products = _applyFilters(snapshot.data!);
 
                 if (products.isEmpty) {
@@ -501,7 +479,6 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                             const SizedBox(width: 12),
 
-                            // Product Info
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,7 +493,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                   ],
-
                                   Text(
                                     product.title,
                                     maxLines: 2,
@@ -529,7 +505,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-
                                   if (product.specBadge != null &&
                                       product.specBadge!.isNotEmpty) ...[
                                     Container(
@@ -551,7 +526,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                   ],
-
                                   Row(
                                     children: [
                                       Text(
@@ -593,8 +567,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 6),
-
-                                  // Price Row
                                   Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.baseline,
@@ -623,7 +595,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 4),
-
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 6,
@@ -651,7 +622,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 10),
-
                                   SizedBox(
                                     width: double.infinity,
                                     height: 36,

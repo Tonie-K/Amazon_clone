@@ -1,13 +1,12 @@
-// Authentication Routes
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const User = mongoose.model("users");
-const jwt = require("jsonwebtoken"); // npm i jsonwebtoken
+const jwt = require("jsonwebtoken");
 
 const requireLogin = require("../middleware/requireLogin");
 
 const otpLength = 6;
-const OTP_TTL_MS = 5 * 60 * 1000; // OTP valid for 5 minutes
+const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes in ms
 
 const normalizeEmail = (email) =>
     typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -26,15 +25,12 @@ module.exports = (app) => {
                 .toString()
                 .padStart(otpLength, "0");
 
-            // Creates the user if they don't exist, otherwise refreshes the OTP
             await User.updateOne(
                 { email },
                 { otp, otpExpiresAt: new Date(Date.now() + OTP_TTL_MS) },
-                { upsert: true },
+                { upsert: true }
             );
 
-            // TODO: send this by email (Nodemailer / Resend / SendGrid).
-            // For development the OTP is only printed in the server console.
             console.log(`OTP for ${email}: ${otp}`);
 
             res.status(200).json({ message: "OTP sent successfully" });
@@ -44,7 +40,7 @@ module.exports = (app) => {
         }
     });
 
-    // VERIFY OTP | Create Auth Token & Send it to Client
+    // VERIFY OTP
     app.post("/api/v1/verify/email/otp", async (req, res) => {
         try {
             const email = normalizeEmail(req.body.email);
@@ -62,15 +58,15 @@ module.exports = (app) => {
                 return res.status(400).json({ message: "Invalid or expired OTP" });
             }
 
-            // One-time use: clear the OTP once it has been verified
             user.otp = undefined;
             user.otpExpiresAt = undefined;
             await user.save();
 
             const payload = { id: user._id, email: user.email };
-            const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: process.env.JWT_EXPIRES_IN,
-            });
+            const secret = process.env.JWT_SECRET || "fallback_secret_key";
+            const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
+
+            const token = jwt.sign(payload, secret, { expiresIn });
 
             res.status(200).json({
                 message: "Login Success",
@@ -83,7 +79,7 @@ module.exports = (app) => {
         }
     });
 
-    // CURRENT USER (also used by the app to check a saved token is still valid)
+    // CURRENT USER
     app.get("/api/v1/current/user", requireLogin, async (req, res) => {
         try {
             const user = await User.findById(req.user.id, "-otp -otpExpiresAt");

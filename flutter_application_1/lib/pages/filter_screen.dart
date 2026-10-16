@@ -19,7 +19,7 @@ class FilterScreen extends StatefulWidget {
 }
 
 class _FilterScreenState extends State<FilterScreen> {
-  int _selectedCategoryIndex = 1; // Default to "Suggested Filters"
+  int _selectedCategoryIndex = 1;
   late bool _isPrimeOnly;
   late List<String> _selectedFilters;
 
@@ -53,7 +53,6 @@ class _FilterScreenState extends State<FilterScreen> {
         '4★ & Up',
       ];
     }
-    // Default Laptop options matching Amazon UI
     return [
       'Great Indian Festival',
       'Most Purchased',
@@ -106,7 +105,6 @@ class _FilterScreenState extends State<FilterScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Sub-Header Title Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -128,12 +126,9 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE3E6E6)),
-
-          // Main Sidebar + Filter Grid
           Expanded(
             child: Row(
               children: [
-                // Left Navigation Sidebar
                 Container(
                   width: 120,
                   color: const Color(0xFFF7F8F8),
@@ -181,14 +176,11 @@ class _FilterScreenState extends State<FilterScreen> {
                     },
                   ),
                 ),
-
                 const VerticalDivider(
                   width: 1,
                   thickness: 1,
                   color: Color(0xFFE3E6E6),
                 ),
-
-                // Right Filter Options Area
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
@@ -219,7 +211,6 @@ class _FilterScreenState extends State<FilterScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
                         const Text(
                           'Suggested Filters',
                           style: TextStyle(
@@ -228,8 +219,6 @@ class _FilterScreenState extends State<FilterScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-
-                        // Prime Toggle Switch
                         Row(
                           children: [
                             const Text(
@@ -254,8 +243,6 @@ class _FilterScreenState extends State<FilterScreen> {
                           ],
                         ),
                         const Divider(height: 24, color: Color(0xFFE3E6E6)),
-
-                        // Chips Grid
                         Wrap(
                           spacing: 8,
                           runSpacing: 10,
@@ -316,8 +303,6 @@ class _FilterScreenState extends State<FilterScreen> {
               ],
             ),
           ),
-
-          // Bottom Action Button
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

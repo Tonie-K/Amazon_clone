@@ -43,7 +43,6 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> _verify() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Grab these before the async gap so we don't use context after await
     final userProvider = context.read<UserProvider>();
     final navigator = Navigator.of(context);
 
@@ -54,7 +53,6 @@ class _OtpScreenState extends State<OtpScreen> {
 
     if (result.success && result.token != null) {
       await userProvider.login(result.token!, result.user);
-      // Back to the first route (the bottom-nav shell)
       navigator.popUntil((route) => route.isFirst);
     } else {
       setState(() => _loading = false);
