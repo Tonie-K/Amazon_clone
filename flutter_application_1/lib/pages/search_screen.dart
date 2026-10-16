@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/constants/intl.dart';
 import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/pages/filter_screen.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
+import 'package:flutter_application_1/providers/cart_provider.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/services/product_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -57,9 +61,30 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // CLIENT-SIDE FILTERING LOGIC
-  // ---------------------------------------------------------------------------
+  void _addToCart(BuildContext context, Product product) async {
+    final user = context.read<UserProvider>();
+    if (!user.isLoggedIn || user.token == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      return;
+    }
+
+    await context.read<CartProvider>().addToCart(
+          user.token!,
+          product.id,
+        );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Added to Cart'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   int? _extractStorageGB(Product product) {
     final combinedText =
@@ -253,7 +278,6 @@ class _SearchScreenState extends State<SearchScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  // Filter Icon Button
                   OutlinedButton(
                     onPressed: _navigateToFilterScreen,
                     style: OutlinedButton.styleFrom(
@@ -281,7 +305,6 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -351,7 +374,6 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-
                   if (_selectedFilters.isNotEmpty)
                     ..._selectedFilters.map(
                       (filter) => Padding(
@@ -431,7 +453,6 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Product Image
                             SizedBox(
                               width: 140,
                               child: Container(
@@ -457,19 +478,24 @@ class _SearchScreenState extends State<SearchScreen> {
                                     Positioned(
                                       left: 6,
                                       bottom: 6,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFFE3E6E6),
+                                      child: InkWell(
+                                        onTap: () =>
+                                            _addToCart(context, product),
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFFE3E6E6),
+                                            ),
                                           ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.add_shopping_cart_outlined,
-                                          size: 16,
-                                          color: Colors.black87,
+                                          child: const Icon(
+                                            Icons.add_shopping_cart_outlined,
+                                            size: 16,
+                                            color: Colors.black87,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -478,7 +504,6 @@ class _SearchScreenState extends State<SearchScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +651,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                     width: double.infinity,
                                     height: 36,
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () =>
+                                          _addToCart(context, product),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
                                             const Color(0xFFFFD814),

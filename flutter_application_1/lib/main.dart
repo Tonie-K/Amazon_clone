@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
+import 'package:flutter_application_1/providers/cart_provider.dart';
 import 'package:flutter_application_1/router.dart';
 import 'package:flutter_application_1/pages/main_layout.dart';
 
@@ -12,8 +13,11 @@ Future<void> main() async {
   await userProvider.loadFromStorage();
 
   runApp(
-    ChangeNotifierProvider.value(
-      value: userProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: userProvider),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+      ],
       child: const MyApp(),
     ),
   );

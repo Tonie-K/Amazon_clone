@@ -26,11 +26,12 @@ require("./models/user");
 require("./models/product");
 require("./models/order");
 
+require("./routes/cartRoutes")(app);
 require("./routes/authRoutes")(app);
 require("./routes/orderRoutes")(app);
 require("./routes/productRoutes")(app);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running on port ${PORT}`);

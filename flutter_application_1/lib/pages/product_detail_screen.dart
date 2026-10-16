@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_1/common/widgets/custom_button.dart';
 import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/pages/auth_screen.dart';
+import 'package:flutter_application_1/providers/cart_provider.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 
 // Helper function to format prices in Indian numbering system (e.g., ₹9,99,000)
 String formatPrice(num price) {
@@ -42,6 +46,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       'originalPrice': 79900,
     },
   ];
+
+  void _addToCart(BuildContext context) async {
+    final user = context.read<UserProvider>();
+    if (!user.isLoggedIn || user.token == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      return;
+    }
+
+    // Await cart update
+    await context.read<CartProvider>().addToCart(
+          user.token!,
+          widget.product.id,
+        );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Added to Cart'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -440,7 +470,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     width: double.infinity,
                     height: 46,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => _addToCart(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFD814),
                         foregroundColor: Colors.black,
