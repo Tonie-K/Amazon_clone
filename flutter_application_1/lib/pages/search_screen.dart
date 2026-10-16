@@ -3,6 +3,7 @@ import 'package:flutter_application_1/common/widgets/custom_app_bar.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/constants/intl.dart';
 import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/pages/filter_screen.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/services/product_service.dart';
 
@@ -19,6 +20,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   late Future<List<Product>> _searchFuture;
   bool _isPrimeOnly = false;
+  List<String> _selectedFilters = [];
 
   @override
   void initState() {
@@ -36,13 +38,169 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  void _navigateToFilterScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FilterScreen(
+          searchQuery: widget.searchQuery,
+          initialIsPrime: _isPrimeOnly,
+          initialSelectedFilters: _selectedFilters,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _isPrimeOnly = result['isPrime'] ?? false;
+        _selectedFilters = List<String>.from(result['selectedFilters'] ?? []);
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // CLIENT-SIDE FILTERING LOGIC
+  // ---------------------------------------------------------------------------
+
+  // Helper: Extract total storage capacity in GB from title or spec badge
+  int? _extractStorageGB(Product product) {
+    final combinedText =
+        '${product.title} ${product.specBadge ?? ''}'.toUpperCase();
+
+    // Matches patterns like "512 GB", "512GB", "1 TB", "1TB", "256 GB"
+    final match = RegExp(r'(\d+)\s*(GB|TB)').firstMatch(combinedText);
+    if (match != null) {
+      final value = int.parse(match.group(1)!);
+      final unit = match.group(2)!;
+      return unit == 'TB' ? value * 1024 : value;
+    }
+    return null;
+  }
+
+  // Helper: Match storage chip against numeric GB value
+  bool _matchesStorageChip(int? capacityGB, String chip) {
+    if (capacityGB == null) return false;
+    if (chip == '250 - 499 GB') {
+      return capacityGB >= 250 && capacityGB <= 499;
+    } else if (chip == '500 - 999 GB') {
+      return capacityGB >= 500 && capacityGB <= 999;
+    } else if (chip == '1 TB & above') {
+      return capacityGB >= 1000;
+    }
+    return false;
+  }
+
+  // Helper: Whole-word search matching using regex word boundaries (\bWord\b)
+  bool _matchesWholeWord(Product product, String targetWord) {
+    final combinedText =
+        '${product.title} ${product.specBadge ?? ''} ${product.description}';
+    final pattern =
+        RegExp('\\b${RegExp.escape(targetWord)}\\b', caseSensitive: false);
+    return pattern.hasMatch(combinedText);
+  }
+
+  List<Product> _applyFilters(List<Product> initialList) {
+    List<Product> products = List.from(initialList);
+
+    // 1. Prime / Sponsored Filter
+    if (_isPrimeOnly) {
+      products = products.where((p) => p.isSponsored).toList();
+    }
+
+    if (_selectedFilters.isEmpty) {
+      return products;
+    }
+
+    // 2. Categorize chips into groups
+    final Map<String, List<String>> filterGroups = {
+      'rating': [],
+      'storage': [],
+      'brands': [],
+      'specs': [],
+      'other': [],
+    };
+
+    for (final filter in _selectedFilters) {
+      if (filter == '4★ & Up') {
+        filterGroups['rating']!.add(filter);
+      } else if (filter == '250 - 499 GB' ||
+          filter == '500 - 999 GB' ||
+          filter == '1 TB & above') {
+        filterGroups['storage']!.add(filter);
+      } else if ([
+        'HP',
+        'Lenovo',
+        'Dell',
+        'ASUS',
+        'Acer',
+        'MSI',
+        'Milton',
+        'Cello'
+      ].contains(filter)) {
+        filterGroups['brands']!.add(filter);
+      } else if ([
+        'Intel',
+        'AMD',
+        'NVIDIA',
+        'SSD',
+        'Stainless Steel',
+        'Insulated',
+        'BPA Free',
+        'Copper'
+      ].contains(filter)) {
+        filterGroups['specs']!.add(filter);
+      } else {
+        filterGroups['other']!.add(filter);
+      }
+    }
+
+    // 3. Evaluate AND across groups, OR within each group
+    return products.where((product) {
+      // Group 1: Rating (Numeric check)
+      if (filterGroups['rating']!.isNotEmpty) {
+        if (product.rating < 4.0) return false;
+      }
+
+      // Group 2: Storage Range (OR across selected storage chips)
+      if (filterGroups['storage']!.isNotEmpty) {
+        final capacityGB = _extractStorageGB(product);
+        final storageMatch = filterGroups['storage']!
+            .any((chip) => _matchesStorageChip(capacityGB, chip));
+        if (!storageMatch) return false;
+      }
+
+      // Group 3: Brands (OR across selected brands, whole-word matching)
+      if (filterGroups['brands']!.isNotEmpty) {
+        final brandMatch = filterGroups['brands']!
+            .any((brand) => _matchesWholeWord(product, brand));
+        if (!brandMatch) return false;
+      }
+
+      // Group 4: Specs (OR across selected specs, whole-word matching)
+      if (filterGroups['specs']!.isNotEmpty) {
+        final specMatch = filterGroups['specs']!
+            .any((spec) => _matchesWholeWord(product, spec));
+        if (!specMatch) return false;
+      }
+
+      // Group 5: Other filters
+      if (filterGroups['other']!.isNotEmpty) {
+        final otherMatch = filterGroups['other']!
+            .any((other) => _matchesWholeWord(product, other));
+        if (!otherMatch) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
-          // 1. Delivery Location & "Join Prime" Banner
+          // 1. Delivery Location Banner
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: const BoxDecoration(
@@ -78,7 +236,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF007185), // Amazon blue
+                    backgroundColor: const Color(0xFF007185),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
@@ -103,7 +261,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
 
-          // 2. Horizontal Filter Bar (Filter Icon + Prime Switch + Filter Chips)
+          // 2. Horizontal Filter Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -113,14 +271,21 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   // Filter Icon Button
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: _navigateToFilterScreen,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 8,
                       ),
                       minimumSize: Size.zero,
-                      side: const BorderSide(color: Color(0xFF888C8C)),
+                      side: BorderSide(
+                        color: (_selectedFilters.isNotEmpty || _isPrimeOnly)
+                            ? const Color(0xFF007185)
+                            : const Color(0xFF888C8C),
+                        width: (_selectedFilters.isNotEmpty || _isPrimeOnly)
+                            ? 1.5
+                            : 1,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -156,14 +321,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Checkmark Icon
                           const Icon(
                             Icons.check,
                             size: 15,
                             color: Color(0xFF00A8E1),
                           ),
                           const SizedBox(width: 2),
-                          // Prime Text
                           const Text(
                             'prime',
                             style: TextStyle(
@@ -174,8 +337,6 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-
-                          // Compact Custom Toggle Switch
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             width: 34,
@@ -208,16 +369,29 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Filter Chip 1: Great Indian Festival
-                  _buildFilterChip('Great Indian Festival'),
-                  const SizedBox(width: 8),
-
-                  // Filter Chip 2: Get It in 2 Days
-                  _buildFilterChip('Get It in 2 Days'),
-                  const SizedBox(width: 8),
-
-                  // Filter Chip 3: Eligible for Pay on Delivery
-                  _buildFilterChip('Eligible for Pay on Delivery'),
+                  // Active Filter Shortcut Chips
+                  if (_selectedFilters.isNotEmpty)
+                    ..._selectedFilters.map(
+                      (filter) => Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: _buildFilterChip(
+                          filter,
+                          isSelected: true,
+                          onTap: () {
+                            setState(() {
+                              _selectedFilters.remove(filter);
+                            });
+                          },
+                        ),
+                      ),
+                    )
+                  else ...[
+                    _buildFilterChip('Great Indian Festival'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Get It in 2 Days'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Eligible for Pay on Delivery'),
+                  ],
                 ],
               ),
             ),
@@ -225,7 +399,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
           const Divider(height: 1, color: Color(0xFFE3E6E6)),
 
-          // 3. Search Results List
+          // 3. Search Results List with Client-Side Filter Evaluation
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _searchFuture,
@@ -243,7 +417,17 @@ class _SearchScreenState extends State<SearchScreen> {
                   );
                 }
 
-                final products = snapshot.data!;
+                // Apply frontend grouped filtering rules
+                final products = _applyFilters(snapshot.data!);
+
+                if (products.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No products match the selected filters.',
+                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                    ),
+                  );
+                }
 
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -269,60 +453,55 @@ class _SearchScreenState extends State<SearchScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Left Section: Product Image & Cart Badge
+                            // Product Image
                             SizedBox(
                               width: 140,
-                              child: Column(
-                                children: [
-                                  Container(
-                                    height: 150,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF8F8F8),
-                                      borderRadius: BorderRadius.circular(4),
+                              child: Container(
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8F8F8),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Image.network(
+                                      product.imageUrl,
+                                      fit: BoxFit.contain,
+                                      height: 130,
+                                      width: 130,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.image_not_supported,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
                                     ),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Image.network(
-                                          product.imageUrl,
-                                          fit: BoxFit.contain,
-                                          height: 130,
-                                          width: 130,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Icon(
-                                            Icons.image_not_supported,
-                                            size: 50,
-                                            color: Colors.grey,
+                                    Positioned(
+                                      left: 6,
+                                      bottom: 6,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFE3E6E6),
                                           ),
                                         ),
-                                        Positioned(
-                                          left: 6,
-                                          bottom: 6,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: const Color(0xFFE3E6E6),
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.add_shopping_cart_outlined,
-                                              size: 16,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
+                                        child: const Icon(
+                                          Icons.add_shopping_cart_outlined,
+                                          size: 16,
+                                          color: Colors.black87,
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
 
-                            // Right Section: Product Info
+                            // Product Info
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,21 +693,40 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // Helper widget to render custom rounded filter pills
-  Widget _buildFilterChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFF888C8C)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF0F1111),
+  Widget _buildFilterChip(
+    String label, {
+    bool isSelected = false,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE2F3F5) : Colors.white,
+          border: Border.all(
+            color:
+                isSelected ? const Color(0xFF007185) : const Color(0xFF888C8C),
+            width: isSelected ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: const Color(0xFF0F1111),
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.close, size: 14, color: Color(0xFF007185)),
+            ],
+          ],
         ),
       ),
     );
