@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/constants/api_config.dart';
 import 'package:flutter_application_1/models/cart_item.dart';
@@ -15,8 +16,10 @@ class CartService {
         final List list = body['cart'] ?? [];
         return list.map((item) => CartItem.fromJson(item)).toList();
       }
+      debugPrint('Fetch Cart Error: ${res.statusCode} ${res.body}');
       return [];
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Fetch Cart Exception: $e\n$stack');
       return [];
     }
   }
@@ -37,8 +40,10 @@ class CartService {
         final List list = body['cart'] ?? [];
         return list.map((item) => CartItem.fromJson(item)).toList();
       }
+      debugPrint('Add to Cart Error: ${res.statusCode} ${res.body}');
       return [];
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Add to Cart Parsing Exception: $e\n$stack');
       return [];
     }
   }
@@ -59,8 +64,10 @@ class CartService {
         final List list = body['cart'] ?? [];
         return list.map((item) => CartItem.fromJson(item)).toList();
       }
+      debugPrint('Update Quantity Error: ${res.statusCode} ${res.body}');
       return [];
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Update Quantity Exception: $e\n$stack');
       return [];
     }
   }
@@ -100,8 +107,10 @@ class CartService {
         );
         return true;
       }
+      debugPrint('Checkout Error: ${res.statusCode} ${res.body}');
       return false;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Checkout Exception: $e\n$stack');
       return false;
     }
   }

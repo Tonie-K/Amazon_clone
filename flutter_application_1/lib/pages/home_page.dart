@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/common/widgets/custom_search_bar.dart';
 import 'package:flutter_application_1/constants/intl.dart';
 import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/models/product_filters.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/pages/search_screen.dart';
 import 'package:flutter_application_1/services/product_service.dart';
@@ -106,7 +107,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
-  late Future<List<Product>> _productsFuture = ProductService.fetchProducts();
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = ProductService.searchProducts(
+      query: '',
+      limit: 100,
+      filters: ProductFilters(),
+    ).then((result) => result.products);
+  }
 
   @override
   void dispose() {
@@ -123,7 +134,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _refresh() async {
-    final future = ProductService.fetchProducts();
+    final future = ProductService.searchProducts(
+      query: '',
+      limit: 100,
+      filters: ProductFilters(),
+    ).then((result) => result.products);
+
     setState(() => _productsFuture = future);
     await future;
   }
