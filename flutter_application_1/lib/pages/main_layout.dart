@@ -10,6 +10,7 @@ import 'package:flutter_application_1/pages/menu_page.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/pages/wallet_page.dart';
 import 'package:flutter_application_1/pages/search_screen.dart';
+import 'package:flutter_application_1/pages/wishlist_page.dart';
 
 class _ShellObserver extends NavigatorObserver {
   final void Function(int delta) onDepthChange;
@@ -107,6 +108,11 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ProductDetailScreen(product: product),
+        );
+      case WishlistPage.routeName:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const WishlistPage(),
         );
       default:
         return MaterialPageRoute(

@@ -20,7 +20,7 @@ module.exports = (app) => {
             const user = await User.findByIdAndUpdate(
                 req.user.id,
                 { $addToSet: { wishlist: productId } },
-                { new: true }
+                { returnDocument: "after" } // Updated option here
             ).populate("wishlist");
 
             res.status(200).json({ message: "Added to wishlist", wishlist: user.wishlist });
@@ -36,7 +36,7 @@ module.exports = (app) => {
             const user = await User.findByIdAndUpdate(
                 req.user.id,
                 { $pull: { wishlist: productId } },
-                { new: true }
+                { returnDocument: "after" } // Updated option here
             ).populate("wishlist");
 
             res.status(200).json({ message: "Removed from wishlist", wishlist: user.wishlist });
