@@ -1,13 +1,16 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import 'package:flutter_application_1/constants/api_config.dart';
 import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/providers/cart_provider.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/providers/wishlist_provider.dart';
 
-// Helper function to format prices in Indian numbering system (e.g., ₹9,99,000)
 String formatPrice(num price) {
   final formatter = NumberFormat.currency(
     locale: 'en_IN',
@@ -28,24 +31,39 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  int _selectedColorIndex = 0;
-  int _selectedSizeIndex = 0;
-  int _selectedConfigIndex = 1;
+  int _selectedVariantIndex = 0;
+  List<Map<String, dynamic>> _attributeDefs = [];
+  bool _loadingDefs = false;
 
-  final List<String> _colors = ['Indigo', 'Citrus', 'Silver'];
-  final List<String> _sizes = ['256GB', '512GB'];
-  final List<Map<String, dynamic>> _configs = [
-    {
-      'title': 'With Apple Care',
-      'price': 75539,
-      'originalPrice': 90399,
-    },
-    {
-      'title': 'Without Apple Care',
-      'price': 67990,
-      'originalPrice': 79900,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchAttributeDefinitions();
+  }
+
+  Future<void> _fetchAttributeDefinitions() async {
+    if (widget.product.category.isEmpty) return;
+    setState(() => _loadingDefs = true);
+    try {
+      final category = Uri.encodeComponent(widget.product.category);
+      final res = await http.get(
+        Uri.parse(
+            '${ApiConfig.baseUrl}/api/v1/categories/$category/attributes'),
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final List defs = data['definitions'] ?? [];
+        if (mounted) {
+          setState(() {
+            _attributeDefs = List<Map<String, dynamic>>.from(defs);
+            _loadingDefs = false;
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDefs = false);
+    }
+  }
 
   void _addToCart(BuildContext context) async {
     final user = context.read<UserProvider>();
@@ -70,6 +88,173 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildSpecTable() {
+    if (_loadingDefs) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_attributeDefs.isEmpty || widget.product.attributes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final List<Widget> rows = [];
+
+    for (final def in _attributeDefs) {
+      final key = def['key'];
+      final label = def['label'] ?? key;
+      final unit = def['unit']?.toString() ?? '';
+
+      if (widget.product.attributes.containsKey(key)) {
+        final val = widget.product.attributes[key];
+        String displayValue = '$val';
+
+        if (val is bool) {
+          displayValue = val ? 'Yes' : 'No';
+        } else if (unit.isNotEmpty) {
+          displayValue = '$val $unit';
+        }
+
+        rows.add(
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            color: rows.length % 2 == 0 ? Colors.grey.shade100 : Colors.white,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    displayValue,
+                    style: const TextStyle(fontSize: 13, color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          child: Text(
+            'Product Specifications',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Column(children: rows),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildDynamicVariantSelector() {
+    final attrs = widget.product.attributes;
+    if (attrs.isEmpty) return const SizedBox.shrink();
+
+    // Determine variant highlight key dynamically based on category attributes
+    String? variantKey;
+    String? label;
+
+    if (attrs.containsKey('storage')) {
+      variantKey = 'storage';
+      label = 'Storage';
+    } else if (attrs.containsKey('capacity')) {
+      variantKey = 'capacity';
+      label = 'Capacity';
+    } else if (attrs.containsKey('sizeUK')) {
+      variantKey = 'sizeUK';
+      label = 'UK Size';
+    } else if (attrs.containsKey('volume')) {
+      variantKey = 'volume';
+      label = 'Volume';
+    } else if (attrs.containsKey('ram')) {
+      variantKey = 'ram';
+      label = 'RAM';
+    }
+
+    if (variantKey == null) return const SizedBox.shrink();
+
+    // Extract definition unit if present
+    final def = _attributeDefs.firstWhere(
+      (d) => d['key'] == variantKey,
+      orElse: () => {},
+    );
+    final unit = def['unit']?.toString() ?? '';
+    final currentValue = attrs[variantKey];
+    final displayVal =
+        unit.isNotEmpty ? '$currentValue $unit' : '$currentValue';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(fontSize: 16),
+              children: [
+                TextSpan(
+                  text: displayVal,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => setState(() => _selectedVariantIndex = 0),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _selectedVariantIndex == 0
+                          ? const Color(0xFF007185)
+                          : Colors.grey.shade400,
+                      width: _selectedVariantIndex == 0 ? 2 : 1,
+                    ),
+                  ),
+                  child: Text(
+                    displayVal,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
   }
 
   @override
@@ -130,21 +315,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: const TextStyle(fontSize: 14, height: 1.3),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF232F3E),
-                      borderRadius: BorderRadius.circular(4),
+                  if (widget.product.isSponsored)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF232F3E),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        "Choice",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    child: const Text(
-                      "Choice",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
                   const SizedBox(height: 8),
                   const Text(
                     '3K+ bought in past month',
@@ -167,228 +353,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 10,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFCC0C39),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('15%',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                        Text('off',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 10)),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
             const Divider(thickness: 1, color: Colors.black12),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      text: 'Colour: ',
-                      style: const TextStyle(fontSize: 16),
-                      children: [
-                        TextSpan(
-                          text: _colors[_selectedColorIndex],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 110,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _colors.length,
-                      itemBuilder: (context, index) {
-                        final isSelected = index == _selectedColorIndex;
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedColorIndex = index),
-                          child: Container(
-                            width: 110,
-                            margin: const EdgeInsets.only(right: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF007185)
-                                    : Colors.grey.shade300,
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: index == 0
-                                      ? Colors.indigo.shade300
-                                      : index == 1
-                                          ? Colors.lime.shade300
-                                          : Colors.grey.shade300,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(_colors[index],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      text: 'Size: ',
-                      style: const TextStyle(fontSize: 16),
-                      children: [
-                        TextSpan(
-                          text: _sizes[_selectedSizeIndex],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: List.generate(_sizes.length, (index) {
-                      final isSelected = index == _selectedSizeIndex;
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedSizeIndex = index),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          margin: const EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected
-                                  ? const Color(0xFF007185)
-                                  : Colors.grey.shade400,
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Text(_sizes[index],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      text: 'Configuration: ',
-                      style: const TextStyle(fontSize: 16),
-                      children: [
-                        TextSpan(
-                          text: _configs[_selectedConfigIndex]['title'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: List.generate(_configs.length, (index) {
-                      final isSelected = index == _selectedConfigIndex;
-                      final config = _configs[index];
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedConfigIndex = index),
-                          child: Container(
-                            margin: EdgeInsets.only(right: index == 0 ? 8 : 0),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF007185)
-                                    : Colors.grey.shade300,
-                                width: isSelected ? 2 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  config['title']!,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  formatPrice(config['price']),
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  formatPrice(config['originalPrice']),
-                                  style: const TextStyle(
-                                    decoration: TextDecoration.lineThrough,
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'In stock',
-                                  style: TextStyle(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(thickness: 1, color: Colors.black12),
+            _buildDynamicVariantSelector(),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -396,14 +365,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text(
-                        '-15%',
-                        style: TextStyle(
-                            color: Color(0xFFCC0C39),
-                            fontSize: 24,
-                            fontWeight: FontWeight.w400),
-                      ),
-                      const SizedBox(width: 8),
                       Text(
                         formatPrice(widget.product.price),
                         style: const TextStyle(
@@ -411,17 +372,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ],
                   ),
-                  const Text(
-                    'M.R.P.: ₹79,900',
-                    style: TextStyle(
-                        decoration: TextDecoration.lineThrough,
-                        color: Colors.grey),
-                  ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'In stock',
+                  Text(
+                    widget.product.stock > 0 ? 'In stock' : 'Out of stock',
                     style: TextStyle(
-                        color: Colors.green,
+                        color: widget.product.stock > 0
+                            ? Colors.green
+                            : Colors.red,
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -530,6 +487,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             const SizedBox(height: 16),
             const Divider(thickness: 1, color: Colors.black12),
+            _buildSpecTable(),
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

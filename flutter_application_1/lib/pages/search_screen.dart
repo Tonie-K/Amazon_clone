@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/constants/intl.dart';
 import 'package:flutter_application_1/models/product.dart';
+import 'package:flutter_application_1/models/product_filters.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/pages/filter_screen.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
@@ -22,43 +23,54 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  late Future<List<Product>> _searchFuture;
+  late Future<SearchResult> _searchFuture;
+  final ProductFilters _filters = ProductFilters();
   bool _isPrimeOnly = false;
-  List<String> _selectedFilters = [];
 
   @override
   void initState() {
     super.initState();
-    _searchFuture = ProductService.searchProducts(widget.searchQuery);
+    _fetchProducts();
   }
 
   @override
   void didUpdateWidget(covariant SearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.searchQuery != widget.searchQuery) {
-      setState(() {
-        _searchFuture = ProductService.searchProducts(widget.searchQuery);
-      });
+      _fetchProducts();
     }
   }
 
+  void _fetchProducts() {
+    setState(() {
+      _searchFuture = ProductService.searchProducts(
+        query: widget.searchQuery,
+        filters: _filters,
+      );
+    });
+  }
+
   void _navigateToFilterScreen() async {
-    final result = await Navigator.push(
+    final result = await Navigator.push<ProductFilters>(
       context,
       MaterialPageRoute(
         builder: (context) => FilterScreen(
-          searchQuery: widget.searchQuery,
-          initialIsPrime: _isPrimeOnly,
-          initialSelectedFilters: _selectedFilters,
+          currentFilters: _filters,
         ),
       ),
     );
 
-    if (result != null && result is Map<String, dynamic>) {
+    if (result != null) {
       setState(() {
-        _isPrimeOnly = result['isPrime'] ?? false;
-        _selectedFilters = List<String>.from(result['selectedFilters'] ?? []);
+        _filters.minPrice = result.minPrice;
+        _filters.maxPrice = result.maxPrice;
+        _filters.minRating = result.minRating;
+        _filters.category = result.category;
+        _filters.enums = result.enums;
+        _filters.numerics = result.numerics;
+        _filters.bools = result.bools;
       });
+      _fetchProducts();
     }
   }
 
@@ -99,134 +111,16 @@ class _SearchScreenState extends State<SearchScreen> {
     context.read<WishlistProvider>().toggleWishlist(user.token!, productId);
   }
 
-  int? _extractStorageGB(Product product) {
-    final combinedText =
-        '${product.title} ${product.specBadge ?? ''}'.toUpperCase();
-
-    final match = RegExp(r'(\d+)\s*(GB|TB)').firstMatch(combinedText);
-    if (match != null) {
-      final value = int.parse(match.group(1)!);
-      final unit = match.group(2)!;
-      return unit == 'TB' ? value * 1024 : value;
-    }
-    return null;
-  }
-
-  bool _matchesStorageChip(int? capacityGB, String chip) {
-    if (capacityGB == null) return false;
-    if (chip == '250 - 499 GB') {
-      return capacityGB >= 250 && capacityGB <= 499;
-    } else if (chip == '500 - 999 GB') {
-      return capacityGB >= 500 && capacityGB <= 999;
-    } else if (chip == '1 TB & above') {
-      return capacityGB >= 1000;
-    }
-    return false;
-  }
-
-  bool _matchesWholeWord(Product product, String targetWord) {
-    final combinedText =
-        '${product.title} ${product.specBadge ?? ''} ${product.description}';
-    final pattern =
-        RegExp('\\b${RegExp.escape(targetWord)}\\b', caseSensitive: false);
-    return pattern.hasMatch(combinedText);
-  }
-
-  List<Product> _applyFilters(List<Product> initialList) {
-    List<Product> products = List.from(initialList);
-
-    if (_isPrimeOnly) {
-      products = products.where((p) => p.isSponsored).toList();
-    }
-
-    if (_selectedFilters.isEmpty) {
-      return products;
-    }
-
-    final Map<String, List<String>> filterGroups = {
-      'rating': [],
-      'storage': [],
-      'brands': [],
-      'specs': [],
-      'other': [],
-    };
-
-    for (final filter in _selectedFilters) {
-      if (filter == '4★ & Up') {
-        filterGroups['rating']!.add(filter);
-      } else if (filter == '250 - 499 GB' ||
-          filter == '500 - 999 GB' ||
-          filter == '1 TB & above') {
-        filterGroups['storage']!.add(filter);
-      } else if ([
-        'HP',
-        'Lenovo',
-        'Dell',
-        'ASUS',
-        'Acer',
-        'MSI',
-        'Milton',
-        'Cello'
-      ].contains(filter)) {
-        filterGroups['brands']!.add(filter);
-      } else if ([
-        'Intel',
-        'AMD',
-        'NVIDIA',
-        'SSD',
-        'Stainless Steel',
-        'Insulated',
-        'BPA Free',
-        'Copper'
-      ].contains(filter)) {
-        filterGroups['specs']!.add(filter);
-      } else {
-        filterGroups['other']!.add(filter);
-      }
-    }
-
-    return products.where((product) {
-      if (filterGroups['rating']!.isNotEmpty) {
-        if (product.rating < 4.0) return false;
-      }
-
-      if (filterGroups['storage']!.isNotEmpty) {
-        final capacityGB = _extractStorageGB(product);
-        final storageMatch = filterGroups['storage']!
-            .any((chip) => _matchesStorageChip(capacityGB, chip));
-        if (!storageMatch) return false;
-      }
-
-      if (filterGroups['brands']!.isNotEmpty) {
-        final brandMatch = filterGroups['brands']!
-            .any((brand) => _matchesWholeWord(product, brand));
-        if (!brandMatch) return false;
-      }
-
-      if (filterGroups['specs']!.isNotEmpty) {
-        final specMatch = filterGroups['specs']!
-            .any((spec) => _matchesWholeWord(product, spec));
-        if (!specMatch) return false;
-      }
-
-      if (filterGroups['other']!.isNotEmpty) {
-        final otherMatch = filterGroups['other']!
-            .any((other) => _matchesWholeWord(product, other));
-        if (!otherMatch) return false;
-      }
-
-      return true;
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final wishlistProvider = context.watch<WishlistProvider>();
+    final activeFilterCount = _filters.activeFilterCount;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
+          // Address bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: const BoxDecoration(
@@ -286,6 +180,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
+          // Horizontal Filter Chips Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -302,29 +197,47 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       minimumSize: Size.zero,
                       side: BorderSide(
-                        color: (_selectedFilters.isNotEmpty || _isPrimeOnly)
+                        color: (activeFilterCount > 0 || _isPrimeOnly)
                             ? const Color(0xFF007185)
                             : const Color(0xFF888C8C),
-                        width: (_selectedFilters.isNotEmpty || _isPrimeOnly)
-                            ? 1.5
-                            : 1,
+                        width:
+                            (activeFilterCount > 0 || _isPrimeOnly) ? 1.5 : 1,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.tune_outlined,
-                      size: 20,
-                      color: Color(0xFF0F1111),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.tune_outlined,
+                          size: 20,
+                          color: Color(0xFF0F1111),
+                        ),
+                        if (activeFilterCount > 0) ...[
+                          const SizedBox(width: 4),
+                          CircleAvatar(
+                            radius: 8,
+                            backgroundColor: const Color(0xFF007185),
+                            child: Text(
+                              '$activeFilterCount',
+                              style: const TextStyle(
+                                  fontSize: 10, color: Colors.white),
+                            ),
+                          )
+                        ]
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // Prime Toggle Filter Chip
                   GestureDetector(
                     onTap: () {
                       setState(() {
                         _isPrimeOnly = !_isPrimeOnly;
                       });
+                      // Perform query refresh based on sponsorship/prime flag
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -389,20 +302,15 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (_selectedFilters.isNotEmpty)
-                    ..._selectedFilters.map(
-                      (filter) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: _buildFilterChip(
-                          filter,
-                          isSelected: true,
-                          onTap: () {
-                            setState(() {
-                              _selectedFilters.remove(filter);
-                            });
-                          },
-                        ),
-                      ),
+                  if (activeFilterCount > 0)
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _filters.clear();
+                        });
+                        _fetchProducts();
+                      },
+                      child: _buildFilterChip('Clear All', isSelected: true),
                     )
                   else ...[
                     _buildFilterChip('Great Indian Festival'),
@@ -416,30 +324,31 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE3E6E6)),
+          // Product Search List
           Expanded(
-            child: FutureBuilder<List<Product>>(
+            child: FutureBuilder<SearchResult>(
               future: _searchFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                if (snapshot.hasError) {
                   return Center(
                     child: Text(
-                      'No results found for "${widget.searchQuery}"',
-                      style: const TextStyle(fontSize: 16),
+                      'Error loading products: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
                     ),
                   );
                 }
 
-                final products = _applyFilters(snapshot.data!);
+                final products = snapshot.data?.products ?? [];
 
                 if (products.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
-                      'No products match the selected filters.',
-                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                      'No results found for "${widget.searchQuery}"',
+                      style: const TextStyle(fontSize: 16),
                     ),
                   );
                 }
