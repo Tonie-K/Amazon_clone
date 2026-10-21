@@ -47,12 +47,18 @@ class _OtpScreenState extends State<OtpScreen> {
     final navigator = Navigator.of(context);
 
     setState(() => _loading = true);
-    final result =
-        await AuthService.verifyOtp(widget.email, _otpController.text.trim());
+    final result = await AuthService.verifyEmailOtp(
+      widget.email,
+      _otpController.text.trim(),
+    );
     if (!mounted) return;
 
     if (result.success && result.token != null) {
-      await userProvider.login(result.token!, result.user);
+      await userProvider.setSession(
+        token: result.token!,
+        email: widget.email,
+        name: result.user?['name'],
+      );
       navigator.popUntil((route) => route.isFirst);
     } else {
       setState(() => _loading = false);
@@ -62,7 +68,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _resend() async {
     setState(() => _resending = true);
-    final result = await AuthService.sendOtp(widget.email);
+    final result = await AuthService.sendEmailOtp(widget.email);
     if (!mounted) return;
     setState(() => _resending = false);
     _showMessage(result.success ? 'A new code has been sent' : result.message);

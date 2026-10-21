@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/constants/api_config.dart';
@@ -19,19 +20,21 @@ class AuthResult {
 }
 
 class AuthService {
-  static const _timeout = Duration(seconds: 15);
-  static const _networkError =
-      'Could not reach the server. Check your connection and try again.';
+  static const Duration _timeout = Duration(seconds: 15);
+  static const String _networkError =
+      'Network error. Check connection and backend running at ApiConfig.baseUrl.';
 
-  static Future<AuthResult> sendOtp(String email) async {
+  // 1. Send OTP to Email
+  static Future<AuthResult> sendEmailOtp(String email) async {
     try {
       final res = await http
           .post(
             Uri.parse('${ApiConfig.baseUrl}/api/v1/send/email/otp'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email}),
+            body: jsonEncode({'email': email.trim()}),
           )
           .timeout(_timeout);
+
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       return AuthResult(
         success: res.statusCode == 200,
@@ -40,41 +43,57 @@ class AuthService {
       );
     } catch (_) {
       return const AuthResult(
-          success: false, statusCode: 0, message: _networkError);
+        success: false,
+        statusCode: 0,
+        message: _networkError,
+      );
     }
   }
 
-  static Future<AuthResult> verifyOtp(String email, String otp) async {
+  // 2. Verify OTP & Login
+  static Future<AuthResult> verifyEmailOtp(String email, String otp) async {
     try {
       final res = await http
           .post(
             Uri.parse('${ApiConfig.baseUrl}/api/v1/verify/email/otp'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email, 'otp': otp}),
+            body: jsonEncode({
+              'email': email.trim(),
+              'otp': otp.trim(),
+            }),
           )
           .timeout(_timeout);
+
       final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final user = body['user'] as Map<String, dynamic>?;
+
       return AuthResult(
         success: res.statusCode == 200,
         statusCode: res.statusCode,
         message: body['message']?.toString() ?? '',
         token: body['token']?.toString(),
-        user: body['user'] as Map<String, dynamic>?,
+        user: user,
       );
     } catch (_) {
       return const AuthResult(
-          success: false, statusCode: 0, message: _networkError);
+        success: false,
+        statusCode: 0,
+        message: _networkError,
+      );
     }
   }
 
-  /// Used on app start to check that a saved token is still valid.
+  // 3. Fetch Current User Profile
   static Future<AuthResult> getCurrentUser(String token) async {
     try {
       final res = await http.get(
         Uri.parse('${ApiConfig.baseUrl}/api/v1/current/user'),
-        // requireLogin reads the raw token from the "authorization" header
-        headers: {'authorization': token},
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': token,
+        },
       ).timeout(_timeout);
+
       final body = jsonDecode(res.body) as Map<String, dynamic>;
       return AuthResult(
         success: res.statusCode == 200,
@@ -84,7 +103,40 @@ class AuthService {
       );
     } catch (_) {
       return const AuthResult(
-          success: false, statusCode: 0, message: _networkError);
+        success: false,
+        statusCode: 0,
+        message: _networkError,
+      );
+    }
+  }
+
+  // 4. Update Profile Name
+  static Future<AuthResult> updateProfile(String token, String name) async {
+    try {
+      final res = await http
+          .put(
+            Uri.parse('${ApiConfig.baseUrl}/api/v1/update/profile'),
+            headers: {
+              'Content-Type': 'application/json',
+              'authorization': token,
+            },
+            body: jsonEncode({'name': name.trim()}),
+          )
+          .timeout(_timeout);
+
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      return AuthResult(
+        success: res.statusCode == 200,
+        statusCode: res.statusCode,
+        message: body['message']?.toString() ?? '',
+        user: body['user'] as Map<String, dynamic>?,
+      );
+    } catch (_) {
+      return const AuthResult(
+        success: false,
+        statusCode: 0,
+        message: _networkError,
+      );
     }
   }
 }

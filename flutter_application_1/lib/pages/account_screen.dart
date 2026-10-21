@@ -4,6 +4,7 @@ import 'package:flutter_application_1/common/widgets/icons_tile.dart';
 import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
+import 'package:flutter_application_1/pages/wishlist_page.dart';
 
 class AccountScreen extends StatefulWidget {
   static const String routeName = '/account';
@@ -89,6 +90,16 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   const SizedBox(height: 20),
                   if (user.isLoggedIn) ...[
+                    ListTile(
+                      leading: const Icon(Icons.favorite_border,
+                          color: Colors.black87),
+                      title: const Text('Your Wish List'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pushNamed(context, WishlistPage.routeName);
+                      },
+                    ),
+                    const Divider(),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -111,7 +122,6 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     const SizedBox(height: 32),
                   ] else ...[
-                    // Create Account Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -133,7 +143,6 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Sign In Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,

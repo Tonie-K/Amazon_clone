@@ -7,14 +7,14 @@ const orderSchema = new Schema(
         products: [
             {
                 product: { type: Schema.Types.ObjectId, ref: "products" },
-                quality: { type: Number },
+                quantity: { type: Number },
             },
         ],
         totalAmount: { type: Number },
         address: { type: String },
         status: { type: String, default: "Pending" },
     },
-    { timestamps: true },
+    { timestamps: true }
 );
 
 mongoose.model("orders", orderSchema);

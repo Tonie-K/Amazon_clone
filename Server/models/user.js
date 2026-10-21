@@ -11,6 +11,9 @@ const userSchema = new Schema({
             product: { type: Schema.Types.ObjectId, ref: "products" },
             quantity: { type: Number, default: 1 },
         }
+    ],
+    wishlist: [
+        { type: Schema.Types.ObjectId, ref: "products" }
     ]
 });
 

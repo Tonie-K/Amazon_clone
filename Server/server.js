@@ -30,6 +30,7 @@ require("./routes/cartRoutes")(app);
 require("./routes/authRoutes")(app);
 require("./routes/orderRoutes")(app);
 require("./routes/productRoutes")(app);
+require("./routes/wishlistRoutes")(app);
 
 const PORT = process.env.PORT || 8000;
 

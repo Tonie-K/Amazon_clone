@@ -1,3 +1,5 @@
+// lib/providers/cart_provider.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_application_1/models/cart_item.dart';
 import 'package:flutter_application_1/services/cart_service.dart';
@@ -18,6 +20,12 @@ class CartProvider extends ChangeNotifier {
         0,
         (sum, item) => sum + item.quantity,
       );
+
+  void clear() {
+    _cart = [];
+    _isLoading = false;
+    notifyListeners();
+  }
 
   Future<void> fetchCart(String token) async {
     _isLoading = true;

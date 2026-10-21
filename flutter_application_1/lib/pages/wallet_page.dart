@@ -19,7 +19,6 @@ class _WalletPageState extends State<WalletPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Top Yellow Gradient Header Area
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -36,7 +35,6 @@ class _WalletPageState extends State<WalletPage> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               child: Column(
                 children: [
-                  // Title Row
                   Row(
                     children: [
                       Container(
@@ -65,7 +63,6 @@ class _WalletPageState extends State<WalletPage> {
                         ),
                       ),
                       const Spacer(),
-                      // Clickable Cashback Badge with Ripple
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -200,7 +197,6 @@ class _WalletPageState extends State<WalletPage> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(

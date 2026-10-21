@@ -3,12 +3,10 @@ const jwt = require("jsonwebtoken");
 
 const requireLogin = (req, res, next) => {
     const token = req.headers["authorization"];
-    console.log(token);
+    const secret = process.env.JWT_SECRET || "fallback_secret_key";
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, payload) => {
-        console.log(err);
+    jwt.verify(token, secret, async (err, payload) => {
         if (err) {
-            console.log("UNAUTHORISED");
             return res
                 .status(401)
                 .json({ message: "You have to log in to continue." });

@@ -8,6 +8,7 @@ import 'package:flutter_application_1/pages/filter_screen.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/providers/cart_provider.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
+import 'package:flutter_application_1/providers/wishlist_provider.dart';
 import 'package:flutter_application_1/services/product_service.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -84,6 +85,18 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       );
     }
+  }
+
+  void _toggleWishlist(BuildContext context, String productId) {
+    final user = context.read<UserProvider>();
+    if (!user.isLoggedIn || user.token == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      return;
+    }
+    context.read<WishlistProvider>().toggleWishlist(user.token!, productId);
   }
 
   int? _extractStorageGB(Product product) {
@@ -208,6 +221,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final wishlistProvider = context.watch<WishlistProvider>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
@@ -435,6 +450,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final product = products[index];
+                    final isWishlisted =
+                        wishlistProvider.isWishlisted(product.id);
 
                     return InkWell(
                       onTap: () {
@@ -473,6 +490,30 @@ class _SearchScreenState extends State<SearchScreen> {
                                         Icons.image_not_supported,
                                         size: 50,
                                         color: Colors.grey,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: GestureDetector(
+                                        onTap: () => _toggleWishlist(
+                                            context, product.id),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            isWishlisted
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            size: 18,
+                                            color: isWishlisted
+                                                ? Colors.red
+                                                : Colors.black54,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     Positioned(

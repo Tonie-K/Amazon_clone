@@ -2,11 +2,10 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const User = mongoose.model("users");
 const jwt = require("jsonwebtoken");
-
 const requireLogin = require("../middleware/requireLogin");
 
 const otpLength = 6;
-const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes in ms
+const OTP_TTL_MS = 5 * 60 * 1000;
 
 const normalizeEmail = (email) =>
     typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -32,10 +31,8 @@ module.exports = (app) => {
             );
 
             console.log(`OTP for ${email}: ${otp}`);
-
             res.status(200).json({ message: "OTP sent successfully" });
         } catch (error) {
-            console.log(error);
             res.status(500).json({ message: error.message });
         }
     });
@@ -74,23 +71,38 @@ module.exports = (app) => {
                 user: { id: user._id, email: user.email, name: user.name },
             });
         } catch (error) {
-            console.log(error);
             res.status(500).json({ message: error.message });
         }
     });
 
-    // CURRENT USER
+    // GET CURRENT USER
     app.get("/api/v1/current/user", requireLogin, async (req, res) => {
         try {
             const user = await User.findById(req.user.id, "-otp -otpExpiresAt");
-
             if (!user) {
                 return res.status(404).json({ message: "User not found" });
             }
-
-            res.status(200).json({ message: "User Found. Current User: ", user });
+            res.status(200).json({ message: "User Found", user });
         } catch (error) {
-            console.log(error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    // UPDATE USER PROFILE NAME
+    app.put("/api/v1/update/profile", requireLogin, async (req, res) => {
+        try {
+            const { name } = req.body;
+            const user = await User.findByIdAndUpdate(
+                req.user.id,
+                { name: name?.trim() },
+                { new: true }
+            ).select("-otp -otpExpiresAt");
+
+            res.status(200).json({
+                message: "Profile updated successfully",
+                user: { id: user._id, email: user.email, name: user.name },
+            });
+        } catch (error) {
             res.status(500).json({ message: error.message });
         }
     });

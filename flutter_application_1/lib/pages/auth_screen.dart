@@ -38,7 +38,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     setState(() => _loading = true);
     final email = _emailController.text.trim().toLowerCase();
-    final result = await AuthService.sendOtp(email);
+    final result = await AuthService.sendEmailOtp(email);
     if (!mounted) return;
     setState(() => _loading = false);
 

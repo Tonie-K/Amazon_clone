@@ -5,6 +5,7 @@ import 'package:flutter_application_1/pages/otp_screen.dart';
 import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/pages/product_detail_screen.dart';
 import 'package:flutter_application_1/pages/search_screen.dart';
+import 'package:flutter_application_1/pages/wishlist_page.dart';
 
 Route<dynamic> generateRoute(RouteSettings routeSettings) {
   switch (routeSettings.name) {
@@ -12,6 +13,11 @@ Route<dynamic> generateRoute(RouteSettings routeSettings) {
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => const AuthScreen(),
+      );
+    case WishlistPage.routeName:
+      return MaterialPageRoute(
+        settings: routeSettings,
+        builder: (_) => const WishlistPage(),
       );
     case ProductDetailScreen.routeName:
       final product = routeSettings.arguments as Product;

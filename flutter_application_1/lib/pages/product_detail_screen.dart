@@ -5,6 +5,7 @@ import 'package:flutter_application_1/models/product.dart';
 import 'package:flutter_application_1/pages/auth_screen.dart';
 import 'package:flutter_application_1/providers/cart_provider.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
+import 'package:flutter_application_1/providers/wishlist_provider.dart';
 
 // Helper function to format prices in Indian numbering system (e.g., ₹9,99,000)
 String formatPrice(num price) {
@@ -56,7 +57,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
-    // Await cart update
     await context.read<CartProvider>().addToCart(
           user.token!,
           widget.product.id,
@@ -74,13 +74,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final wishlistProvider = context.watch<WishlistProvider>();
+    final isWishlisted = wishlistProvider.isWishlisted(widget.product.id);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Store Link & Ratings
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -151,8 +153,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
-
-            // Product Image Section with Discount Badge
             Stack(
               children: [
                 Center(
@@ -193,11 +193,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
             const Divider(thickness: 1, color: Colors.black12),
-
-            // Options Section (Color Selection)
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -263,8 +260,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
-
-            // Size Selector
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Column(
@@ -311,10 +306,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // Configuration Selector
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Column(
@@ -395,11 +387,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
             const Divider(thickness: 1, color: Colors.black12),
-
-            // Pricing & Offers Section
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -458,8 +447,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
             ),
-
-            // Action Buttons Section
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -506,26 +493,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   SizedBox(
                     width: double.infinity,
                     height: 40,
-                    child: OutlinedButton(
-                      onPressed: () {},
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        final user = context.read<UserProvider>();
+                        if (!user.isLoggedIn || user.token == null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AuthScreen()),
+                          );
+                          return;
+                        }
+                        context
+                            .read<WishlistProvider>()
+                            .toggleWishlist(user.token!, widget.product.id);
+                      },
+                      icon: Icon(
+                        isWishlisted ? Icons.favorite : Icons.favorite_border,
+                        color: isWishlisted ? Colors.red : Colors.black,
+                        size: 18,
+                      ),
+                      label: Text(
+                        isWishlisted ? 'In Your Wish List' : 'Add to Wish List',
+                        style: const TextStyle(color: Colors.black),
+                      ),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.grey.shade400),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: const Text('Add to Wish List',
-                          style: TextStyle(color: Colors.black)),
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
             const Divider(thickness: 1, color: Colors.black12),
-
-            // Description / Details Section
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
