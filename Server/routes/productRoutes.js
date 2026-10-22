@@ -46,7 +46,7 @@ module.exports = (app) => {
 
             const totalProducts = await Product.countDocuments(mongoFilter);
             const products = await Product.find(mongoFilter)
-                .sort({ _id: -1 }) // Stable sort
+                .sort({ _id: -1 })
                 .skip(skip)
                 .limit(limit);
 
@@ -89,15 +89,14 @@ module.exports = (app) => {
                 return match;
             };
 
-            // 1. Determine category
+            // 1. Determine category: explicit query param OR top category from matching search query
             let selectedCategory = req.query.category ? req.query.category.trim() : null;
 
             if (!selectedCategory && queryText) {
                 const topCategoryMatch = await Product.aggregate([
                     { $match: buildMatch() },
                     { $group: { _id: "$category", count: { $sum: 1 } } },
-                    { $sort: { count: -1 } },
-                    { $limit: 1 }
+                    { $sort: { count: -1 } }, { $limit: 1 }
                 ]);
                 if (topCategoryMatch.length > 0) {
                     selectedCategory = topCategoryMatch[0]._id;
@@ -137,21 +136,20 @@ module.exports = (app) => {
                 ]
             };
 
-            // 3. Dynamic aggregation branches per attribute
+            // 3. Build dynamic aggregation branches for each attribute
             activeCategoryDef.forEach((def) => {
                 const attrField = `$attributes.${def.key}`;
                 if (def.type === "bool") {
-                    facetBranches[`attr_\${def.key}`] = [
+                    facetBranches[`attr_${def.key}`] = [
                         { $match: buildMatch(def.key) },
                         { $match: { [attrField.replace('$', '')]: true } },
                         { $count: "trueCount" }
                     ];
                 } else {
-                    facetBranches[`attr_\${def.key}`] = [
+                    facetBranches[`attr_${def.key}`] = [
                         { $match: buildMatch(def.key) },
-                        { $match: { [attrField.replace('$', '')]: { $exists: true, $ne: null } } },
-                        { $group: { _id: attrField, count: { $sum: 1 } } },
-                        { $sort: { _id: 1 } },
+                        { $unwind: attrField },
+                        { $group: { _id: attrField, count: { $sum: 1 } } }, { $sort: { _id: 1 } },
                         { $project: { value: "$_id", count: 1, _id: 0 } }
                     ];
                 }
@@ -167,7 +165,7 @@ module.exports = (app) => {
             const categories = rawFacets.categories || [];
 
             const attributes = activeCategoryDef.map((def) => {
-                const branchData = rawFacets[`attr_\${def.key}`] || [];
+                const branchData = rawFacets[`attr_${def.key}`] || [];
                 if (def.type === "bool") {
                     return {
                         key: def.key,
