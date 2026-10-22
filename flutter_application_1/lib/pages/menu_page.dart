@@ -4,12 +4,6 @@ import 'package:flutter_application_1/constants/global_variables.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/pages/wishlist_page.dart';
 
-/// Menu / Browse page.
-/// Place at: lib/pages/menu_page.dart
-///
-/// Every item shows a built-in icon tile, so no asset files are required.
-/// To use your own artwork later, pass `asset: 'assets/images/...png'` to any
-/// _MenuItem; the icon is then used only as a fallback.
 class MenuPage extends StatefulWidget {
   static const String routeName = '/menu';
   const MenuPage({super.key});
@@ -21,7 +15,6 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   int _selectedIndex = 0;
 
-  // ---------------- Sidebar data ----------------
   static const List<_MenuItem> _sidebar = [
     _MenuItem('Top Picks', Icons.auto_awesome, Color(0xFFF5A623)),
     _MenuItem('Amazon Pay', Icons.account_balance_wallet, Color(0xFF37475A)),
@@ -29,15 +22,14 @@ class _MenuPageState extends State<MenuPage> {
     _MenuItem('Deals & Savings', Icons.local_offer, Color(0xFFE53935)),
     _MenuItem('Fashion & Beauty', Icons.checkroom, Color(0xFFD81B60)),
     _MenuItem('Home & Furniture', Icons.chair, Color(0xFF8D6E63)),
-    _MenuItem('Groceries & Pet Supplies', Icons.shopping_basket,
-        Color(0xFF43A047)),
+    _MenuItem(
+        'Groceries & Pet Supplies', Icons.shopping_basket, Color(0xFF43A047)),
     _MenuItem('Books & Education', Icons.menu_book, Color(0xFF6D4C41)),
     _MenuItem('Video & Music', Icons.play_circle_fill, Color(0xFF3949AB)),
     _MenuItem('Prime', Icons.delivery_dining, Color(0xFF00A8E1)),
-    _MenuItem('Games & Live Shopping', Icons.sports_esports,
-        Color(0xFF8E24AA)),
-    _MenuItem('Pharmacy & Household', Icons.medical_services,
-        Color(0xFF00897B)),
+    _MenuItem('Games & Live Shopping', Icons.sports_esports, Color(0xFF8E24AA)),
+    _MenuItem(
+        'Pharmacy & Household', Icons.medical_services, Color(0xFF00897B)),
     _MenuItem('Travel & Auto', Icons.flight, Color(0xFF039BE5)),
     _MenuItem('Toys & Kids', Icons.toys, Color(0xFFFF7043)),
     _MenuItem('Sports & Fitness', Icons.fitness_center, Color(0xFF546E7A)),
@@ -47,7 +39,6 @@ class _MenuPageState extends State<MenuPage> {
     _MenuItem('Account & Help', Icons.support_agent, Color(0xFF1976D2)),
   ];
 
-  // ---------------- Right panel data ----------------
   static const List<_MenuItem> _topCategories = [
     _MenuItem('For you', Icons.celebration, Color(0xFFC62828)),
     _MenuItem('Mobiles', Icons.smartphone, Color(0xFF00897B)),
@@ -81,7 +72,6 @@ class _MenuPageState extends State<MenuPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ---------- Sidebar + content ----------
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,8 +81,6 @@ class _MenuPageState extends State<MenuPage> {
                 ],
               ),
             ),
-
-            // ---------- Shortcuts ----------
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),

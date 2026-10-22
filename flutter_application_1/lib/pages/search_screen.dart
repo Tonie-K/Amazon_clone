@@ -55,17 +55,18 @@ class _SearchScreenState extends State<SearchScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => FilterScreen(
-          currentFilters: _filters,
+          currentFilters: _filters.copy(),
+          searchQuery: widget.searchQuery,
         ),
       ),
     );
 
     if (result != null) {
       setState(() {
+        _filters.category = result.category;
         _filters.minPrice = result.minPrice;
         _filters.maxPrice = result.maxPrice;
         _filters.minRating = result.minRating;
-        _filters.category = result.category;
         _filters.enums = result.enums;
         _filters.numerics = result.numerics;
         _filters.bools = result.bools;
